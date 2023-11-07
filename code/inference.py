@@ -1,9 +1,7 @@
 import io
+import pathlib
 
-import ssh_util
 import torch
-
-from marinedebrisdetector.checkpoints import CHECKPOINTS
 from marinedebrisdetector.model.segmentation_model import SegmentationModel
 from marinedebrisdetector.predictor import ScenePredictor
 
@@ -16,21 +14,34 @@ def define_device():
     return processing_unit
 
 
+def get_model_path(model_dir):
+    model_path = pathlib.Path(model_dir)
+    model_file = list(model_path.glob("*.ckpt"))
+    if len(model_file) == 0:
+        raise FileNotFoundError(f"Could not find model file in {model_dir}")
+    elif len(model_file) > 1:
+        raise ValueError(f"Found multiple model files in {model_dir}")
+    else:
+        return model_file[0]
+
+
 def model_fn(model_dir):
     """
     Args:
       model_dir: the directory where model is saved.
     Returns:
-      SegmentationModel from unet++ checkpoint
+      SegmentationModel from the model_dir.
     """
-    ssh_util.create_unverified_https_context()
     device = define_device()
+    model_path = get_model_path(model_dir)
 
     detector = SegmentationModel.load_from_checkpoint(
-        CHECKPOINTS["unet++1"], strict=False, map_location=device, trust_repo=True
+        checkpoint_path=model_path,
+        map_location=device,
+        strict=False,
     )
     print(f"Loaded model from {model_dir}")
-    return detector
+    return detector.to(device)
 
 
 def input_fn(request_body, request_content_type):
@@ -65,17 +76,20 @@ def output_fn(prediction, content_type):
         raise ValueError(f"Unsupported content type: {content_type}")
 
 
-# if __name__ == "__main__":
-#     model = model_fn("model")
-#     print(model)
-#     with open(
-#         "/Users/marc.leerink/dev/PlasticDetectionService/images/5cb12a6cbd6df0865947f21170bc432a/response.tiff",
-#         "rb",
-#     ) as f:
-#         input_data = f.read()
-#     input = input_fn(input_data, "application/octet-stream")
-#     print(input)
-#     prediction = predict_fn(input, model)
-#     print(prediction)
-#     output = output_fn(prediction, "application/octet-stream")
-#     print(output)
+if __name__ == "__main__":
+    model = model_fn("model")
+    print(model)
+    with open(
+        "/Users/marc.leerink/dev/PlasticDetectionService/images/5cb12a6cbd6df0865947f21170bc432a/response.tiff",
+        "rb",
+    ) as f:
+        input_data = f.read()
+    input = input_fn(input_data, "application/octet-stream")
+    print(input)
+    prediction = predict_fn(input, model)
+    print(prediction)
+    output = output_fn(prediction, "application/octet-stream")
+    print(output)
+    print(output)
+    print(output)
+    print(output)

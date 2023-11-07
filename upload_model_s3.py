@@ -1,6 +1,6 @@
 import boto3
 
-PATH_TO_MODEL = "/Users/marc.leerink/dev/PlasticDetectionService/sagemaker/model.tar.gz"
+PATH_TO_MODEL = "model.tar.gz"
 BUCKET_NAME = "sagemaker-studio-768912473174-0ryazmj34j9"
 FILENAME = "model.tar.gz"
 

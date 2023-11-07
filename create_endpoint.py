@@ -62,10 +62,8 @@ def create_model(
         serverless_inference_config=serverless_inference_config,
     )
 
-    # Initialize sagemaker session
     sess = sagemaker.Session()
 
-    # Initialize boto3 sagemaker client
     region = sess.boto_region_name
     sm_client = boto3.client("sagemaker", region_name=region)
 
@@ -198,9 +196,9 @@ def wait_endpoint_creation(endpoint_name):
         describe_endpoint_response = client.describe_endpoint(
             EndpointName=endpoint_name
         )
-        print(describe_endpoint_response["EndpointStatus"])
+        LOGGER.info("Endpoint status: %s", describe_endpoint_response["EndpointStatus"])
         time.sleep(15)
-
+    LOGGER.info("Endpoint ready %s", describe_endpoint_response)
     return describe_endpoint_response
 
 
@@ -224,7 +222,5 @@ if __name__ == "__main__":
     create_endpoint_config(
         MODEL_NAME, ENDPOINT_CONFIG_NAME, MEMORY_SIZE_MB, MAX_CONCURRENCY
     )
-    create_endpoint(ENDPOINT_CONFIG_NAME, ENDPOINT_NAME)
-    wait_endpoint_creation(ENDPOINT_NAME)
     create_endpoint(ENDPOINT_CONFIG_NAME, ENDPOINT_NAME)
     wait_endpoint_creation(ENDPOINT_NAME)
