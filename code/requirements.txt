@@ -1,0 +1,8 @@
+torch
+numpy
+pytorch-lightning
+wandb
+scikit-learn
+segmentation-models-pytorch
+rasterio
+geopandas
