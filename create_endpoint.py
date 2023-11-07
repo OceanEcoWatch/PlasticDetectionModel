@@ -1,22 +1,30 @@
 import logging
+import time
 
 import boto3
 import sagemaker
+from botocore.exceptions import ClientError
 from sagemaker import image_uris
 from sagemaker.serverless import ServerlessInferenceConfig
 
+from config import (
+    CONTENT_TYPE,
+    ENDPOINT_CONFIG_NAME,
+    ENDPOINT_NAME,
+    FRAMEWORK,
+    FRAMEWORK_VERSION,
+    IMAGE_SCOPE,
+    MAX_CONCURRENCY,
+    MEMORY_SIZE_MB,
+    MODEL_NAME,
+    MODEL_PATH,
+    PY_VERSION,
+    REGION_NAME,
+    SAGEMAKER_ROLE,
+)
+
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
-
-model_name = "MarineDebrisDetectorModel"
-endpoint_config_name = "MarineDebrisDetectorEndpointConfig"
-endpoint_name = "MarineDebrisDetectorEndpoint"
-region_name = "eu-central-1"
-model_path = "s3://sagemaker-studio-768912473174-0ryazmj34j9/model.tar.gz"
-sagemaker_role = "arn:aws:iam::768912473174:role/service-role/AmazonSageMaker-ExecutionRole-20231017T155251"
-content_type = "application/octet-stream"
-memory_size_in_mb = 2048
-max_concurrency = 1
 
 
 def create_model(
@@ -25,12 +33,12 @@ def create_model(
     sagemaker_role,
     content_type,
     region_name,
-    framework="pytorch",
-    framework_version="2.0.1",
-    py_version="py310",
-    image_scope="inference",
-    memory_size_in_mb=2048,
-    max_concurrency=1,
+    memory_size_in_mb,
+    max_concurrency,
+    framework,
+    framework_version,
+    py_version,
+    image_scope,
 ):
     LOGGER.info("Creating serverless inference model with following parameters:")
     LOGGER.info("model_path: %s", model_path)
@@ -100,7 +108,7 @@ def create_model(
 
 
 def create_endpoint_config(
-    model_name, endpoint_config_name, memory_size_in_mb=2048, max_concurrency=1
+    model_name, endpoint_config_name, memory_size_in_mb, max_concurrency
 ):
     LOGGER.info("Creating endpoint config %s", endpoint_config_name)
     client = boto3.client(service_name="sagemaker")
@@ -133,30 +141,90 @@ def create_endpoint(endpoint_config_name, endpoint_name):
 
 
 def delete_model(model_name):
-    LOGGER.info("Deleting model %s", model_name)
     client = boto3.client(service_name="sagemaker")
-    response = client.delete_model(ModelName=model_name)
-    LOGGER.info("Model deleted %s", response)
-    return response
+    try:
+        response = client.delete_model(ModelName=model_name)
+        LOGGER.info("Model deleted %s", response)
+        return response
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "ValidationException":
+            LOGGER.info("Unable to delete model name %s due to %s", model_name, e)
+        else:
+            raise e
+        return
 
 
 def delete_endpoint_config(endpoint_config_name):
-    LOGGER.info("Deleting endpoint config %s", endpoint_config_name)
     client = boto3.client(service_name="sagemaker")
-    response = client.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
-    LOGGER.info("Endpoint config deleted %s", response)
-    return response
+    try:
+        response = client.delete_endpoint_config(
+            EndpointConfigName=endpoint_config_name
+        )
+        LOGGER.info("Endpoint config deleted %s", response)
+        return response
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "ValidationException":
+            LOGGER.info(
+                "Unable to delete endpoint config name %s due to %s",
+                endpoint_config_name,
+                e,
+            )
+        else:
+            raise e
+        return
 
 
 def delete_endpoint(endpoint_name):
-    LOGGER.info("Deleting endpoint %s", endpoint_name)
     client = boto3.client(service_name="sagemaker")
-    response = client.delete_endpoint(EndpointName=endpoint_name)
-    LOGGER.info("Endpoint deleted %s", response)
-    return response
+    try:
+        response = client.delete_endpoint(EndpointName=endpoint_name)
+        LOGGER.info("Endpoint deleted %s", response)
+        return response
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "ValidationException":
+            LOGGER.info(
+                "Unable to delete endpoint name %s, due to %s", endpoint_name, e
+            )
+        else:
+            raise e
+        return
+
+
+def wait_endpoint_creation(endpoint_name):
+    client = boto3.client(service_name="sagemaker")
+    describe_endpoint_response = client.describe_endpoint(EndpointName=endpoint_name)
+
+    while describe_endpoint_response["EndpointStatus"] == "Creating":
+        describe_endpoint_response = client.describe_endpoint(
+            EndpointName=endpoint_name
+        )
+        print(describe_endpoint_response["EndpointStatus"])
+        time.sleep(15)
+
+    return describe_endpoint_response
 
 
 if __name__ == "__main__":
-    create_model(model_path, model_name, sagemaker_role, content_type, region_name)
-    create_endpoint_config(model_name, endpoint_config_name)
-    create_endpoint(endpoint_config_name, endpoint_name)
+    delete_endpoint(ENDPOINT_NAME)
+    delete_endpoint_config(ENDPOINT_CONFIG_NAME)
+    delete_model(MODEL_NAME)
+    create_model(
+        MODEL_PATH,
+        MODEL_NAME,
+        SAGEMAKER_ROLE,
+        CONTENT_TYPE,
+        REGION_NAME,
+        MEMORY_SIZE_MB,
+        MAX_CONCURRENCY,
+        FRAMEWORK,
+        FRAMEWORK_VERSION,
+        PY_VERSION,
+        IMAGE_SCOPE,
+    )
+    create_endpoint_config(
+        MODEL_NAME, ENDPOINT_CONFIG_NAME, MEMORY_SIZE_MB, MAX_CONCURRENCY
+    )
+    create_endpoint(ENDPOINT_CONFIG_NAME, ENDPOINT_NAME)
+    wait_endpoint_creation(ENDPOINT_NAME)
+    create_endpoint(ENDPOINT_CONFIG_NAME, ENDPOINT_NAME)
+    wait_endpoint_creation(ENDPOINT_NAME)

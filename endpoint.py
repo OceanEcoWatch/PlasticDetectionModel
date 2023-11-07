@@ -1,7 +1,6 @@
 import boto3
 
-ENDPOINT_NAME = "MarineDebrisDetectorEndpoint"
-CONTENT_TYPE = "application/octet-stream"
+from config import CONTENT_TYPE, ENDPOINT_NAME
 
 
 def invoke(endpoint_name: str, content_type: str, payload: bytes) -> bytes:
