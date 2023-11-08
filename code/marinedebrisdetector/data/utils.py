@@ -1,10 +1,7 @@
 import os.path
 
-import geopandas as gpd
 import numpy as np
 import rasterio as rio
-import shapely
-from shapely.geometry import LineString
 from tqdm import tqdm
 
 L1CBANDS = [
@@ -83,43 +80,11 @@ def read_tif_image(imagefile, window=None):
     return image, win_transform
 
 
-def get_window(geometry, output_size, transform):
-    if isinstance(geometry, shapely.geometry.base.BaseGeometry):
-        left, bottom, right, top = geometry.bounds
-    else:  # geopandas series
-        left, bottom, right, top = geometry.geometry.bounds
-
-    pixel_size = transform.a
-
-    width = right - left
-    height = top - bottom
-
-    buffer_left_right = (output_size * pixel_size - width) / 2
-    left -= buffer_left_right
-    right += buffer_left_right
-
-    buffer_bottom_top = (output_size * pixel_size - height) / 2
-    bottom -= buffer_bottom_top
-    top += buffer_bottom_top
-
-    return rio.windows.from_bounds(left, bottom, right, top, transform)
-
-
 def line_is_closed(linestringgeometry):
     coordinates = np.stack(linestringgeometry.xy).T
     first_point = coordinates[0]
     last_point = coordinates[-1]
     return bool((first_point == last_point).all())
-
-
-def split_line_gdf_into_segments(lines):
-    def segments(curve):
-        return list(map(LineString, zip(curve.coords[:-1], curve.coords[1:])))
-
-    line_segments = []
-    for geometry in lines.geometry:
-        line_segments += segments(geometry)
-    return gpd.GeoDataFrame(geometry=line_segments)
 
 
 def download(url, output_path=None):

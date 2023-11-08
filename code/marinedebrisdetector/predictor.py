@@ -5,12 +5,11 @@ from pathlib import Path
 import numpy as np
 import rasterio
 import torch
+from marinedebrisdetector.model.unet import UNet
+from marinedebrisdetector.transforms import get_transform
 from rasterio.windows import Window
 from scipy.ndimage.filters import gaussian_filter
 from tqdm import tqdm
-
-from marinedebrisdetector.model.unet import UNet
-from marinedebrisdetector.transforms import get_transform
 
 
 class ScenePredictor:
