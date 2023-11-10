@@ -4,7 +4,7 @@ import logging
 import pathlib
 import ssl
 
-import numpy as np
+import rasterio
 import torch
 from marinedebrisdetector.checkpoints import CHECKPOINTS
 from marinedebrisdetector.model.segmentation_model import SegmentationModel
@@ -63,10 +63,10 @@ def model_fn(model_dir):
 
 
 def input_fn(request_body, request_content_type):
-    if request_content_type == "application/x-npy":
-        # Convert binary data back to a NumPy array
-        buffer = io.BytesIO(request_body)
-        return np.load(buffer)
+    if request_content_type == "application/octet-stream":
+        with rasterio.open(io.BytesIO(request_body)) as src:
+            image = src.read()
+            return image
     else:
         raise ValueError(f"Unsupported content type: {request_content_type}")
 
@@ -101,7 +101,7 @@ def output_fn(prediction, content_type):
     Returns:
       Serialized response ready to be returned by the endpoint.
     """
-    if content_type == "application/x-npy":
+    if content_type == "application/octet-stream":
         serialized_prediction = json.dumps(prediction.tolist())
         return serialized_prediction
     else:
@@ -109,37 +109,17 @@ def output_fn(prediction, content_type):
 
 
 # if __name__ == "__main__":
-#     from marinedebrisdetector import process
-#     from matplotlib import pyplot as plt
+#     import matplotlib.pyplot as plt
 
 #     with open(
-#         "images/first_half.tiff",
+#         "images/response.tiff",
 #         "rb",
 #     ) as f:
 #         input_data = f.read()
 
 #     model = model_fn(".")
-#     window_size = (480, 480)
-#     windows = process.preprocess_image(input_data, image_size=window_size)
-#     predictions = []
-#     windows_output = []
-#     images = []
-#     for image, window, meta in windows:
-#         buffer = io.BytesIO()
-#         np.save(buffer, image)
-#         image = input_fn(buffer.getvalue(), "application/x-npy")
-#         images.append(image)
-#         prediction = predict_fn(image, model)
-#         predictions.append(prediction)
-#         windows_output.append(window)
-
-#         print(prediction)
-#         output = output_fn(prediction, "application/x-npy")
-#         print(output)
-#         plt.imshow(prediction)
-#         plt.show()
-
-#     raw_pred_bytes = process.post_process_image(
-#         predictions, images, windows_output, meta
-#     )
-#     print(raw_pred_bytes)
+#     np_input_data = input_fn(input_data, "application/octet-stream")
+#     prediction = predict_fn(np_input_data, model=model)
+#     output = output_fn(prediction, "application/octet-stream")
+#     plt.imshow(json.loads(output))
+#     plt.show()

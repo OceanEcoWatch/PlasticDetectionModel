@@ -10,9 +10,7 @@ from scipy.ndimage.filters import gaussian_filter
 LOGGER = logging.getLogger(__name__)
 
 
-def preprocess_image(
-    data: bytes, image_size=(480, 480), offset=64
-) -> list[tuple[np.ndarray, Window, dict]]:
+def preprocess_image(data: bytes, image_size=(480, 480), offset=64) -> list[bytes]:
     with rasterio.open(io.BytesIO(data)) as src:
         meta = src.meta.copy()
         H, W = image_size
@@ -20,21 +18,13 @@ def preprocess_image(
         cols = np.arange(0, meta["width"], W)
         image_window = Window(0, 0, meta["width"], meta["height"])
 
-        windows = []
+        window_byte_streams = []
         for r, c in product(rows, cols):
             H, W = image_size
             window = image_window.intersection(
-                Window(
-                    c - offset,
-                    r - offset,
-                    W + offset,
-                    H + offset,
-                )
+                Window(c - offset, r - offset, W + offset, H + offset)
             )
             image = src.read(window=window)
-
-            if image.shape[0] > 12:
-                image = image[:12]
 
             H, W = H + offset * 2, W + offset * 2
 
@@ -49,9 +39,24 @@ def preprocess_image(
                     (int(np.ceil(dw)), int(np.floor(dw))),
                 ],
             )
-            windows.append((image, window, meta))
+            # Adjust meta for individual window
+            window_meta = meta.copy()
+            window_meta.update(
+                {
+                    "height": window.height,
+                    "width": window.width,
+                }
+            )
 
-        return windows
+            # Convert window to TIFF byte stream
+            buffer = io.BytesIO()
+            with rasterio.open(buffer, "w+", **window_meta) as mem_dst:
+                mem_dst.write(image)
+
+            window_byte_stream = buffer.getvalue()
+            window_byte_streams.append(window_byte_stream)
+
+        return window_byte_streams
 
 
 def unpad(y_score: np.ndarray, window: Window, dh: float, dw: float):
@@ -72,7 +77,7 @@ def unpad(y_score: np.ndarray, window: Window, dh: float, dw: float):
 
 def post_process_image(
     predictions: list[np.ndarray],
-    images: list[np.ndarray],
+    images: list[bytes],
     windows: list[Window],
     meta: dict,
     offset=64,
