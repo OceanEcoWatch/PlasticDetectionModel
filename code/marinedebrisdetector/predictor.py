@@ -1,10 +1,13 @@
+import io
 import logging
 
 import numpy as np
+import rasterio
 import torch
 from marinedebrisdetector.model.segmentation_model import SegmentationModel
 
 logging.basicConfig(level=logging.INFO)
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -12,10 +15,16 @@ LOGGER = logging.getLogger(__name__)
 def predict(
     model: SegmentationModel,
     image: np.ndarray,
+    metadata: dict,
     activation="sigmoid",
     device="cpu",
-) -> np.ndarray:
-    if image.shape[1] % 32 != 0 or image.shape[2] % 32 != 0:
+) -> bytes:
+    metadata["count"] = 1
+    metadata["dtype"] = "uint8"
+    metadata["driver"] = "GTiff"
+    _, h, w = image.shape
+
+    if h % 32 != 0 or w % 32 != 0:
         LOGGER.info("Padding image to be divisible by 32")
         image = pad_to_divisible_by_32(image)
 
@@ -48,20 +57,41 @@ def predict(
             LOGGER.info("Converting to numpy")
             y_score = y_logits.cpu().detach().numpy()[0]
 
-        return y_score
+    LOGGER.info("Unpad to original size")
+    y_score = unpad_to_original_size(y_score, h, w)
+
+    LOGGER.info("Converting to tiff byte stream")
+    pred_image_byte_stream = io.BytesIO()
+    with rasterio.open(pred_image_byte_stream, "w+", **metadata) as dst:
+        writedata = (np.expand_dims(y_score, 0).astype(np.float32) * 255).astype(
+            np.uint8
+        )
+        dst.write(writedata)
+
+    return pred_image_byte_stream.getvalue()
 
 
-def pad_to_divisible_by_32(image, pad_value=0):
-    """
-    Pad an image so that its height and width are divisible by 32.
+def unpad_to_original_size(
+    padded_image: np.ndarray, original_height: int, original_width: int
+) -> np.ndarray:
+    h_start = (padded_image.shape[0] - original_height) // 2
+    w_start = (padded_image.shape[1] - original_width) // 2
 
-    Args:
-        image (numpy.ndarray): The image to pad.
-        pad_value (int, optional): The value to use for padding. Default is 0.
+    unpadded_image = padded_image[
+        h_start : h_start + original_height, w_start : w_start + original_width
+    ]
+    if unpadded_image.shape[0] != original_height:
+        raise ValueError(
+            f"unpadding size mismatch: {unpadded_image.shape[0]} != {original_height}"
+        )
+    if unpadded_image.shape[1] != original_width:
+        raise ValueError(
+            f"unpadding size mismatch: {unpadded_image.shape[1]} != {original_width}"
+        )
+    return unpadded_image
 
-    Returns:
-        numpy.ndarray: The padded image.
-    """
+
+def pad_to_divisible_by_32(image: np.ndarray) -> np.ndarray:
     bands, h, w = image.shape
 
     h_pad = (32 - h % 32) % 32
@@ -74,4 +104,6 @@ def pad_to_divisible_by_32(image, pad_value=0):
     )
     padded_image = np.pad(image, padding)
 
+    return padded_image
+    return padded_image
     return padded_image

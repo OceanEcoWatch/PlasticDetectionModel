@@ -16,6 +16,10 @@ def invoke(endpoint_name: str, content_type: str, payload: bytes) -> str:
 
 
 if __name__ == "__main__":
+    import json
+
+    import matplotlib.pyplot as plt
+
     with open(
         "tests/data/first_half.tiff",
         "rb",
@@ -23,3 +27,5 @@ if __name__ == "__main__":
         input_data = f.read()
 
     pred = invoke(ENDPOINT_NAME, CONTENT_TYPE, input_data)
+    plt.imshow(json.loads(pred))
+    plt.show()
