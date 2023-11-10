@@ -2,16 +2,13 @@ import numpy as np
 import pytorch_lightning as pl
 import torch
 import wandb
+from marinedebrisdetector.metrics import calculate_metrics, get_loss
+from marinedebrisdetector.model.model import get_model
 from sklearn.metrics import precision_recall_curve
 from torch.optim import Adam
 
-from marinedebrisdetector.metrics import calculate_metrics, get_loss
-from marinedebrisdetector.model.model import get_model
 
-
-class SegmentationModel(
-    pl.LightningModule
-):  # todo purpose of ScenePredictor vs SegmentationModel
+class SegmentationModel(pl.LightningModule):
     def __init__(self, args):
         super().__init__()
 
@@ -86,13 +83,6 @@ class SegmentationModel(
         y_true = y_true.reshape(-1).astype(int)
         y_scores = y_scores.reshape(-1)
 
-        # is_marida = np.array(["marida" in i for i in ids])
-        # y_true_marida = y_true[is_marida]
-        # y_scores_marida = y_scores[is_marida]
-
-        # y_true = y_true[~is_marida]
-        # y_scores = y_scores[~is_marida]
-
         precision, recall, thresholds = precision_recall_curve(y_true, y_scores)
         ix = np.abs(precision - recall).argmin()
         optimal_threshold = thresholds[ix]
@@ -119,10 +109,6 @@ class SegmentationModel(
                 )
             }
         )
-
-        # if len(y_scores_marida) > 100: # only if some samples available to calculate metrics
-        #    metrics_marida = calculate_metrics(y_true_marida, y_scores_marida, optimal_threshold)
-        #    self.log("validation-marida", {k: torch.tensor(v) for k, v in metrics_marida.items()})
 
         metrics = calculate_metrics(y_true, y_scores, optimal_threshold)
         self.log("validation", {k: torch.tensor(v) for k, v in metrics.items()})

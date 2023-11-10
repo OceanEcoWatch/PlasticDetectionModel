@@ -89,11 +89,8 @@ def create_model(
                 "Mode": "SingleModel",
                 "ModelDataUrl": model_path,
                 "Environment": {
-                    "SAGEMAKER_SUBMIT_DIRECTORY": model_path,
                     "SAGEMAKER_PROGRAM": "inference.py",
                     "SAGEMAKER_REGION": region_name,
-                    "LOG_LOCATION": "/tmp",
-                    "METRICS_LOCATION": "/tmp",
                 },
             }
         ],
@@ -197,7 +194,8 @@ def wait_endpoint_creation(endpoint_name):
             EndpointName=endpoint_name
         )
         LOGGER.info("Endpoint status: %s", describe_endpoint_response["EndpointStatus"])
-        time.sleep(15)
+        if describe_endpoint_response["EndpointStatus"] == "Creating":
+            time.sleep(15)
     LOGGER.info("Endpoint ready %s", describe_endpoint_response)
     return describe_endpoint_response
 

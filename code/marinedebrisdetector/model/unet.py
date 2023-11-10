@@ -2,9 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# ============== some parts of the U-Net model ===============#
-""" Parts of the U-Net model """
-
 
 class DoubleConv(nn.Module):
     """(convolution => [BN] => ReLU) * 2"""
@@ -76,10 +73,6 @@ class OutConv(nn.Module):
 
     def forward(self, x):
         return self.conv(x)
-
-
-# =================== Assembling parts to form the network =================#
-""" Full assembly of the parts to form the complete network """
 
 
 class UNet(nn.Module):

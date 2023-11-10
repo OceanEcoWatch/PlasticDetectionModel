@@ -4,7 +4,6 @@
 rm -rf model.tar.gz
 
 # zip the folders for sagemaker deployment
-tar -cvpzf model.tar.gz model code
+tar -cvpzf model.tar.gz --exclude='*__pycache__*' code
 
-
-python upload_model_s3.py
+python3 upload_model_s3.py
