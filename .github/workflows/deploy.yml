@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   workflow_run:
-    workflows: ["Tests", "Format and Lint"]
+    workflows: ["Integration Test"]
     branches: [main]
     types:
       - completed

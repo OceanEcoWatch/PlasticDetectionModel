@@ -62,6 +62,8 @@ coverage.xml
 .pytest_cache/
 cover/
 .testmondata
+.testmondata-shm
+.testmondata-wal
 
 # Translations
 *.mo
