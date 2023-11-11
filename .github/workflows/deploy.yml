@@ -1,6 +1,14 @@
 name: Deploy
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "code/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "code/**"
   workflow_run:
     workflows: ["Tests", "Format and Lint"]
     branches: [main]
