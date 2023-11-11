@@ -4,12 +4,12 @@ import sys
 # append code directory to sys.path
 sys.path.append("code")
 
-from code.inference import input_fn, model_fn, output_fn, predict_fn
-from code.marinedebrisdetector.checkpoints import CHECKPOINTS
-from code.marinedebrisdetector.model.segmentation_model import SegmentationModel
+from code.inference import input_fn, model_fn, output_fn, predict_fn  # noqa
+from code.marinedebrisdetector.checkpoints import CHECKPOINTS  # noqa
+from code.marinedebrisdetector.model.segmentation_model import SegmentationModel  # noqa
 
-import pytest
-import rasterio
+import pytest  # noqa
+import rasterio  # noqa
 
 
 @pytest.fixture
