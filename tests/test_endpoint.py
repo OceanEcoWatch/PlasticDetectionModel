@@ -26,6 +26,7 @@ from create_endpoint import (
     delete_model,
     wait_endpoint_creation,
 )
+from invoke import invoke_endpoint
 from tests.conftest import (
     MSE_THRESHOLD,
     TEST_ENDPOINT_CONFIG_NAME,
@@ -71,11 +72,6 @@ def test_create_endpoint(aws_credentials):
 
 @pytest.mark.e_2_e
 def test_create_and_invoke_and_delete_endpoint(input_data, expected_prediction, caplog):
-    delete_endpoint(TEST_ENDPOINT_NAME)
-    delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME)
-    delete_model(TEST_MODEL_NAME)
-    runtime = boto3.client("sagemaker-runtime", region_name="eu-central-1")
-
     try:
         create_model(
             TEST_S3_MODEL_PATH,
@@ -96,13 +92,7 @@ def test_create_and_invoke_and_delete_endpoint(input_data, expected_prediction, 
         create_endpoint(TEST_ENDPOINT_CONFIG_NAME, TEST_ENDPOINT_NAME)
         wait_endpoint_creation(TEST_ENDPOINT_NAME)
 
-        response = runtime.invoke_endpoint(
-            EndpointName=TEST_MODEL_NAME,
-            ContentType=CONTENT_TYPE,
-            Body=input_data,
-            Accept=CONTENT_TYPE,
-        )
-        predictions = response["Body"].read()
+        predictions = invoke_endpoint(TEST_ENDPOINT_NAME, input_data, CONTENT_TYPE)
 
         with rasterio.open(io.BytesIO(predictions)) as src:
             pred_image = src.read()
