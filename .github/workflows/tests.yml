@@ -1,7 +1,7 @@
 name: Integration Tests
 
 on:
-  push:
+  pull_request:
     branches: [main]
     paths-ignore:
       - ".github/**"
@@ -41,7 +41,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests with testmon
-        run: python -m pytest -vv --testmon -m "e2e" -m "integration"
+        run: python -m pytest -vv --testmon
         env:
           SAGEMAKER_ROLE: ${{ secrets.SAGEMAKER_ROLE }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
