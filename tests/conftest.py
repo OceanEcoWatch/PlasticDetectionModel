@@ -3,6 +3,7 @@ import sys
 sys.path.append("code")
 
 import io  # noqa
+import os  # noqa
 from code.marinedebrisdetector.checkpoints import CHECKPOINTS  # noqa
 from code.marinedebrisdetector.model.segmentation_model import SegmentationModel  # noqa
 
@@ -10,6 +11,30 @@ import pytest  # noqa
 import rasterio  # noqa
 
 MSE_THRESHOLD = 0.01
+TEST_MODEL_NAME = "TestMarineDebrisDetectorModel"
+TEST_ENDPOINT_CONFIG_NAME = "TestMarineDebrisDetectorEndpointConfig"
+TEST_ENDPOINT_NAME = "TestMarineDebrisDetectorEndpoint"
+
+TEST_MODEL_SOURCE_DIR = "code"
+TEST_S3_BUCKET_NAME = "test-sagemaker-studio-768912473174-0ryazmj34j9"
+TEST_S3_FILENAME = "test-model.tar.gz"
+TEST_S3_MODEL_PATH = f"s3://{TEST_S3_BUCKET_NAME}/{TEST_S3_FILENAME}"
+
+
+@pytest.fixture(autouse=False)
+def aws_credentials():
+    """Mocked AWS Credentials for moto."""
+    os.environ["AWS_ACCESS_KEY_ID"] = "testing"
+    os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
+    os.environ["AWS_SECURITY_TOKEN"] = "testing"
+    os.environ["AWS_SESSION_TOKEN"] = "testing"
+
+    yield
+
+    del os.environ["AWS_ACCESS_KEY_ID"]
+    del os.environ["AWS_SECRET_ACCESS_KEY"]
+    del os.environ["AWS_SECURITY_TOKEN"]
+    del os.environ["AWS_SESSION_TOKEN"]
 
 
 @pytest.fixture
