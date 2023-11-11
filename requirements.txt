@@ -11,3 +11,4 @@ scikit-learn
 pytest
 ruff
 black
+isort

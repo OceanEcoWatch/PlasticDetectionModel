@@ -92,7 +92,7 @@ def unpad_to_original_size(
 
 
 def pad_to_divisible_by_32(image: np.ndarray) -> np.ndarray:
-    bands, h, w = image.shape
+    _, h, w = image.shape
 
     h_pad = (32 - h % 32) % 32
     w_pad = (32 - w % 32) % 32
@@ -104,6 +104,4 @@ def pad_to_divisible_by_32(image: np.ndarray) -> np.ndarray:
     )
     padded_image = np.pad(image, padding)
 
-    return padded_image
-    return padded_image
     return padded_image
