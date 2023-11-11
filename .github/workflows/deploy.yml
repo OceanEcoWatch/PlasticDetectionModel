@@ -35,12 +35,16 @@ jobs:
         run: |
           python upload_model_s3.py
         env:
+          SAGEMAKER_ROLE: ${{ secrets.SAGEMAKER_ROLE }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
       - name: Create Sagemaker Endpoint
         run: |
           python create_endpoint.py
         env:
+          SAGEMAKER_ROLE: ${{ secrets.SAGEMAKER_ROLE }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}

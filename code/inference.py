@@ -30,8 +30,8 @@ def define_device():
 
 
 def model_fn(model_dir) -> SegmentationModel:
-    create_unverified_https_context()
     device = define_device()
+    create_unverified_https_context()
 
     detector = SegmentationModel.load_from_checkpoint(
         checkpoint_path=CHECKPOINTS["unet++1"],
