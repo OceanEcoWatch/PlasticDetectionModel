@@ -1,5 +1,10 @@
-from sklearn.metrics import (accuracy_score, cohen_kappa_score, jaccard_score,
-                             precision_recall_fscore_support, roc_auc_score)
+from sklearn.metrics import (
+    accuracy_score,
+    cohen_kappa_score,
+    jaccard_score,
+    precision_recall_fscore_support,
+    roc_auc_score,
+)
 from torch import nn
 
 

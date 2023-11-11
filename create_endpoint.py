@@ -7,10 +7,21 @@ from botocore.exceptions import ClientError
 from sagemaker import image_uris
 from sagemaker.serverless import ServerlessInferenceConfig
 
-from config import (CONTENT_TYPE, ENDPOINT_CONFIG_NAME, ENDPOINT_NAME,
-                    FRAMEWORK, FRAMEWORK_VERSION, IMAGE_SCOPE, MAX_CONCURRENCY,
-                    MEMORY_SIZE_MB, MODEL_NAME, MODEL_PATH, PY_VERSION,
-                    REGION_NAME, SAGEMAKER_ROLE)
+from config import (
+    CONTENT_TYPE,
+    ENDPOINT_CONFIG_NAME,
+    ENDPOINT_NAME,
+    FRAMEWORK,
+    FRAMEWORK_VERSION,
+    IMAGE_SCOPE,
+    MAX_CONCURRENCY,
+    MEMORY_SIZE_MB,
+    MODEL_NAME,
+    PY_VERSION,
+    REGION_NAME,
+    S3_MODEL_PATH,
+    SAGEMAKER_ROLE,
+)
 
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
@@ -194,7 +205,7 @@ if __name__ == "__main__":
     delete_endpoint_config(ENDPOINT_CONFIG_NAME)
     delete_model(MODEL_NAME)
     create_model(
-        MODEL_PATH,
+        S3_MODEL_PATH,
         MODEL_NAME,
         SAGEMAKER_ROLE,
         CONTENT_TYPE,
