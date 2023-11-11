@@ -201,9 +201,9 @@ def wait_endpoint_creation(endpoint_name):
 
 
 if __name__ == "__main__":
-    delete_endpoint(ENDPOINT_NAME)
-    delete_endpoint_config(ENDPOINT_CONFIG_NAME)
-    delete_model(MODEL_NAME)
+    delete_endpoint(ENDPOINT_NAME, REGION_NAME)
+    delete_endpoint_config(ENDPOINT_CONFIG_NAME, REGION_NAME)
+    delete_model(MODEL_NAME, REGION_NAME)
     create_model(
         S3_MODEL_PATH,
         MODEL_NAME,

@@ -70,7 +70,7 @@ def test_create_endpoint(aws_credentials, caplog):
 
 @mock_sagemaker
 def test_delete_endpoint(aws_credentials, caplog):
-    # no endpoint/model/config exists
+    # no endpoint/model/config exists so funcs should return None
     assert delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME) is None
 
     assert delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME) is None
