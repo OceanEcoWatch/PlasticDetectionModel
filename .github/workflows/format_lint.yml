@@ -7,6 +7,7 @@ on:
     branches: [main, dev]
 jobs:
   build:
+    name: Format and Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
