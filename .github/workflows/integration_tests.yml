@@ -3,8 +3,9 @@ name: Integration Tests
 on:
   push:
     branches: [main]
-    paths:
-      ["tests/**", "code/**", "endpoint/**", "config/**", "requirements.txt"]
+    paths-ignore:
+      - ".github/**"
+      - "docs/**"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -40,7 +41,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests with testmon
-        run: python -m pytest -vv --testmon -m "e2e"
+        run: python -m pytest -vv --testmon -m "e2e" -m "integration"
         env:
           SAGEMAKER_ROLE: ${{ secrets.SAGEMAKER_ROLE }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}

@@ -3,6 +3,9 @@ name: Unit Tests
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - ".github/**"
+      - "docs/**"
   pull_request:
     branches: [main]
 
