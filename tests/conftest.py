@@ -4,7 +4,8 @@ sys.path.append("code")
 
 import io  # noqa
 from code.marinedebrisdetector.checkpoints import CHECKPOINTS  # noqa
-from code.marinedebrisdetector.model.segmentation_model import SegmentationModel  # noqa
+from code.marinedebrisdetector.model.segmentation_model import \
+    SegmentationModel  # noqa
 
 import pytest  # noqa
 import rasterio  # noqa
