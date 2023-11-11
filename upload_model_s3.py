@@ -7,6 +7,8 @@ from typing import Callable, Optional
 import boto3
 from botocore.exceptions import NoCredentialsError
 
+from config import MODEL_SOURCE_DIR, S3_BUCKET_NAME, S3_MODEL_PATH
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -50,3 +52,11 @@ def upload_model(
     else:
         LOGGER.error("Model upload failed")
         return False
+
+
+if __name__ == "__main__":
+    upload_model(
+        source_dir=MODEL_SOURCE_DIR,
+        bucket_name=S3_BUCKET_NAME,
+        object_name=S3_MODEL_PATH,
+    )
