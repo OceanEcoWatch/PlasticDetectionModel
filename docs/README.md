@@ -1,5 +1,5 @@
-[![Deploy](https://github.com/OceanEcoWatch/sagemaker_deploy/actions/workflows/deploy.yml/badge.svg)](https://github.com/OceanEcoWatch/sagemaker_deploy/actions/workflows/deploy.yml)
-[![Unit Tests](https://github.com/OceanEcoWatch/sagemaker_deploy/actions/workflows/unit_tests.yml/badge.svg)](https://github.com/OceanEcoWatch/sagemaker_deploy/actions/workflows/unit_tests.yml)
+[![Deploy](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/deploy_prod.yml/badge.svg?event=deployment)](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/deploy_prod.yml)
+
 
 [![Format and Lint](https://github.com/OceanEcoWatch/sagemaker_deploy/actions/workflows/format_lint.yml/badge.svg)](https://github.com/OceanEcoWatch/sagemaker_deploy/actions/workflows/format_lint.yml)
 
