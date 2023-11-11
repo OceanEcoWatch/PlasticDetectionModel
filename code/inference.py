@@ -29,7 +29,7 @@ def define_device():
     return processing_unit
 
 
-def model_fn(model_dir):
+def model_fn(model_dir) -> SegmentationModel:
     create_unverified_https_context()
     device = define_device()
 
@@ -73,23 +73,23 @@ def output_fn(prediction, content_type):
         raise ValueError(f"Unsupported content type: {content_type}")
 
 
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
+# if __name__ == "__main__":
+#     import matplotlib.pyplot as plt
 
-    with open(
-        "images/response.tiff",
-        "rb",
-    ) as f:
-        input_data = f.read()
+#     with open(
+#         "images/response.tiff",
+#         "rb",
+#     ) as f:
+#         input_data = f.read()
 
-    model = model_fn(".")
-    np_input_data = input_fn(input_data, "application/octet-stream")
-    prediction = predict_fn(np_input_data, model=model)
-    output = output_fn(prediction, "application/octet-stream")
+#     model = model_fn(".")
+#     np_input_data = input_fn(input_data, "application/octet-stream")
+#     prediction = predict_fn(np_input_data, model=model)
+#     output = output_fn(prediction, "application/octet-stream")
 
-    with io.BytesIO(output) as buffer:
-        with rasterio.open(buffer) as src:
-            image_data = src.read()
+#     with io.BytesIO(output) as buffer:
+#         with rasterio.open(buffer) as src:
+#             image_data = src.read()
 
-            plt.imshow(image_data[0])
-            plt.show()
+#             plt.imshow(image_data[0])
+#             plt.show()
