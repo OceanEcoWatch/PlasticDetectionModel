@@ -106,7 +106,7 @@ def test_create_endpoint():
 #     assert m_resp["ResponseMetadata"]["HTTPStatusCode"] == 200
 
 
-@pytest.mark.e2e
+@pytest.mark.integration
 def test_create_and_invoke_and_delete_endpoint(input_data, expected_prediction, caplog):
     try:
         model_response = create_model(

@@ -1,12 +1,14 @@
 name: Format and Lint
 
 on:
-  push:
-    branches: [main, dev]
   pull_request:
-    branches: [main, dev]
+    branches: [main]
+    paths-ignore:
+      - ".github/**"
+      - "docs/**"
 jobs:
   build:
+    name: Format and Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
