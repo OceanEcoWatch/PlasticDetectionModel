@@ -36,7 +36,7 @@ from tests.utils import mse
 
 
 @mock_sagemaker
-def test_create_endpoint(aws_credentials):
+def test_create_endpoint(aws_credentials, caplog):
     model_response = create_model(
         TEST_S3_MODEL_PATH,
         TEST_MODEL_NAME,
@@ -66,6 +66,48 @@ def test_create_endpoint(aws_credentials):
     assert endpoint_response["EndpointStatus"] == "InService"
     assert endpoint_response["EndpointName"] == TEST_ENDPOINT_NAME
     assert endpoint_response["EndpointConfigName"] == TEST_ENDPOINT_CONFIG_NAME
+
+
+@mock_sagemaker
+def test_delete_endpoint(aws_credentials, caplog):
+    # no endpoint/model/config exists
+    assert delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME) is None
+
+    assert delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME) is None
+
+    assert delete_model(TEST_MODEL_NAME, REGION_NAME) is None
+
+    assert "Unable to delete endpoint" in caplog.text
+    assert "Unable to delete endpoint config" in caplog.text
+    assert "Unable to delete model" in caplog.text
+
+    create_model(
+        TEST_S3_MODEL_PATH,
+        TEST_MODEL_NAME,
+        SAGEMAKER_ROLE,
+        CONTENT_TYPE,
+        REGION_NAME,
+        MEMORY_SIZE_MB,
+        MAX_CONCURRENCY,
+        FRAMEWORK,
+        FRAMEWORK_VERSION,
+        PY_VERSION,
+        IMAGE_SCOPE,
+    )
+    create_endpoint_config(
+        TEST_MODEL_NAME, TEST_ENDPOINT_CONFIG_NAME, MEMORY_SIZE_MB, MAX_CONCURRENCY
+    )
+    create_endpoint(TEST_ENDPOINT_CONFIG_NAME, TEST_ENDPOINT_NAME)
+
+    # delete existing endpoint/model/config
+    e_resp = delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME)
+    assert e_resp["ResponseMetadata"]["HTTPStatusCode"] == 200
+
+    ec_resp = delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME)
+    assert ec_resp["ResponseMetadata"]["HTTPStatusCode"] == 200
+
+    m_resp = delete_model(TEST_MODEL_NAME, REGION_NAME)
+    assert m_resp["ResponseMetadata"]["HTTPStatusCode"] == 200
 
 
 @pytest.mark.e2e
@@ -116,6 +158,6 @@ def test_create_and_invoke_and_delete_endpoint(input_data, expected_prediction, 
         assert mse(pred_image, expected_image) < MSE_THRESHOLD
 
     finally:
-        delete_endpoint(TEST_ENDPOINT_NAME)
-        delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME)
-        delete_model(TEST_MODEL_NAME)
+        delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME)
+        delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME)
+        delete_model(TEST_MODEL_NAME, REGION_NAME)
