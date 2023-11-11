@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - "code/**"
+      - "config.py"
   pull_request:
     branches: [main]
     paths:
       - "code/**"
+      - "config.py"
   workflow_run:
     workflows: ["Tests", "Format and Lint"]
     branches: [main]
