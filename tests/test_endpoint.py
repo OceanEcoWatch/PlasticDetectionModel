@@ -15,7 +15,7 @@ from config import (
     REGION_NAME,
     SAGEMAKER_ROLE,
 )
-from create_endpoint import (
+from endpoint.create_endpoint import (
     create_endpoint,
     create_endpoint_config,
     create_model,
@@ -24,7 +24,7 @@ from create_endpoint import (
     delete_model,
     wait_endpoint_creation,
 )
-from invoke_endpoint import invoke_endpoint
+from endpoint.invoke_endpoint import invoke_endpoint
 from tests.conftest import (
     MSE_THRESHOLD,
     TEST_ENDPOINT_CONFIG_NAME,

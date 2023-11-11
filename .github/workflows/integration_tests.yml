@@ -3,7 +3,8 @@ name: Integration Tests
 on:
   push:
     branches: [main]
-    paths: ["tests/**", "code/**", "requirements.txt", create_endpoint.py]
+    paths:
+      ["tests/**", "code/**", "endpoint/**", "config/**", "requirements.txt"]
 jobs:
   build:
     runs-on: ubuntu-latest
