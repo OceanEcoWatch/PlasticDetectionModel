@@ -16,6 +16,7 @@ FRAMEWORK = "pytorch"
 FRAMEWORK_VERSION = "2.0.1"
 PY_VERSION = "py310"
 IMAGE_SCOPE = "inference"
+MODEL_SOURCE_DIR = "code"
 
 S3_BUCKET_NAME = "sagemaker-studio-768912473174-0ryazmj34j9"
 S3_MODEL_NAME = "model.tar.gz"

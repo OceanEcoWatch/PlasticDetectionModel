@@ -135,8 +135,8 @@ def create_endpoint(endpoint_config_name, endpoint_name):
     return endpoint_response
 
 
-def delete_model(model_name):
-    client = boto3.client(service_name="sagemaker")
+def delete_model(model_name, region_name):
+    client = boto3.client(service_name="sagemaker", region_name=region_name)
     try:
         response = client.delete_model(ModelName=model_name)
         LOGGER.info("Model deleted %s", response)
@@ -149,8 +149,8 @@ def delete_model(model_name):
         return
 
 
-def delete_endpoint_config(endpoint_config_name):
-    client = boto3.client(service_name="sagemaker")
+def delete_endpoint_config(endpoint_config_name, region_name):
+    client = boto3.client(service_name="sagemaker", region_name=region_name)
     try:
         response = client.delete_endpoint_config(
             EndpointConfigName=endpoint_config_name
@@ -169,8 +169,8 @@ def delete_endpoint_config(endpoint_config_name):
         return
 
 
-def delete_endpoint(endpoint_name):
-    client = boto3.client(service_name="sagemaker")
+def delete_endpoint(endpoint_name, region_name):
+    client = boto3.client(service_name="sagemaker", region_name=region_name)
     try:
         response = client.delete_endpoint(EndpointName=endpoint_name)
         LOGGER.info("Endpoint deleted %s", response)
@@ -201,9 +201,9 @@ def wait_endpoint_creation(endpoint_name):
 
 
 if __name__ == "__main__":
-    delete_endpoint(ENDPOINT_NAME)
-    delete_endpoint_config(ENDPOINT_CONFIG_NAME)
-    delete_model(MODEL_NAME)
+    delete_endpoint(ENDPOINT_NAME, REGION_NAME)
+    delete_endpoint_config(ENDPOINT_CONFIG_NAME, REGION_NAME)
+    delete_model(MODEL_NAME, REGION_NAME)
     create_model(
         S3_MODEL_PATH,
         MODEL_NAME,

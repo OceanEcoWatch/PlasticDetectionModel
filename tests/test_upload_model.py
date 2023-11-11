@@ -8,7 +8,7 @@ from upload_model_s3 import create_tart_gz_in_memory, exclude_pycache, upload_mo
 
 
 @mock_s3
-def test_upload_model(aws_credentials):
+def test_upload_model():
     conn = boto3.resource("s3", region_name="us-east-1")
     conn.create_bucket(Bucket=TEST_S3_BUCKET_NAME)
 

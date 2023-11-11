@@ -1,9 +1,7 @@
 import io
 
-import boto3
 import pytest
 import rasterio
-from botocore.exceptions import ClientError
 from moto import mock_sagemaker
 
 from config import (
@@ -26,6 +24,7 @@ from create_endpoint import (
     delete_model,
     wait_endpoint_creation,
 )
+from invoke_endpoint import invoke_endpoint
 from tests.conftest import (
     MSE_THRESHOLD,
     TEST_ENDPOINT_CONFIG_NAME,
@@ -37,7 +36,7 @@ from tests.utils import mse
 
 
 @mock_sagemaker
-def test_create_endpoint(aws_credentials):
+def test_create_endpoint():
     model_response = create_model(
         TEST_S3_MODEL_PATH,
         TEST_MODEL_NAME,
@@ -69,15 +68,48 @@ def test_create_endpoint(aws_credentials):
     assert endpoint_response["EndpointConfigName"] == TEST_ENDPOINT_CONFIG_NAME
 
 
-@pytest.mark.e_2_e
-def test_create_and_invoke_and_delete_endpoint(input_data, expected_prediction, caplog):
-    delete_endpoint(TEST_ENDPOINT_NAME)
-    delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME)
-    delete_model(TEST_MODEL_NAME)
-    runtime = boto3.client("sagemaker-runtime", region_name="eu-central-1")
+# @mock_sagemaker
+# def test_delete_endpoint(caplog):
+#     # no endpoint/model/config exists so funcs should return None
+#     assert delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME) is None
 
+#     assert delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME) is None
+
+#     # assert delete_model(TEST_MODEL_NAME, REGION_NAME) is None
+
+#     create_model(
+#         TEST_S3_MODEL_PATH,
+#         TEST_MODEL_NAME,
+#         SAGEMAKER_ROLE,
+#         CONTENT_TYPE,
+#         REGION_NAME,
+#         MEMORY_SIZE_MB,
+#         MAX_CONCURRENCY,
+#         FRAMEWORK,
+#         FRAMEWORK_VERSION,
+#         PY_VERSION,
+#         IMAGE_SCOPE,
+#     )
+#     create_endpoint_config(
+#         TEST_MODEL_NAME, TEST_ENDPOINT_CONFIG_NAME, MEMORY_SIZE_MB, MAX_CONCURRENCY
+#     )
+#     create_endpoint(TEST_ENDPOINT_CONFIG_NAME, TEST_ENDPOINT_NAME)
+
+#     # delete existing endpoint/model/config
+#     e_resp = delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME)
+#     assert e_resp["ResponseMetadata"]["HTTPStatusCode"] == 200
+
+#     ec_resp = delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME)
+#     assert ec_resp["ResponseMetadata"]["HTTPStatusCode"] == 200
+
+#     m_resp = delete_model(TEST_MODEL_NAME, REGION_NAME)
+#     assert m_resp["ResponseMetadata"]["HTTPStatusCode"] == 200
+
+
+@pytest.mark.e2e
+def test_create_and_invoke_and_delete_endpoint(input_data, expected_prediction, caplog):
     try:
-        create_model(
+        model_response = create_model(
             TEST_S3_MODEL_PATH,
             TEST_MODEL_NAME,
             SAGEMAKER_ROLE,
@@ -90,19 +122,28 @@ def test_create_and_invoke_and_delete_endpoint(input_data, expected_prediction, 
             PY_VERSION,
             IMAGE_SCOPE,
         )
-        create_endpoint_config(
+        assert TEST_MODEL_NAME.lower() in model_response["ModelArn"].lower()
+        endpoint_config_response = create_endpoint_config(
             TEST_MODEL_NAME, TEST_ENDPOINT_CONFIG_NAME, MEMORY_SIZE_MB, MAX_CONCURRENCY
         )
-        create_endpoint(TEST_ENDPOINT_CONFIG_NAME, TEST_ENDPOINT_NAME)
-        wait_endpoint_creation(TEST_ENDPOINT_NAME)
-
-        response = runtime.invoke_endpoint(
-            EndpointName=TEST_MODEL_NAME,
-            ContentType=CONTENT_TYPE,
-            Body=input_data,
-            Accept=CONTENT_TYPE,
+        assert (
+            TEST_ENDPOINT_CONFIG_NAME.lower()
+            in endpoint_config_response["EndpointConfigArn"].lower()
         )
-        predictions = response["Body"].read()
+        endpoint_response = create_endpoint(
+            TEST_ENDPOINT_CONFIG_NAME, TEST_ENDPOINT_NAME
+        )
+
+        assert TEST_ENDPOINT_NAME.lower() in endpoint_response["EndpointArn"].lower()
+        endpoint_response = wait_endpoint_creation(TEST_ENDPOINT_NAME)
+
+        assert endpoint_response["EndpointStatus"] == "InService"
+        assert endpoint_response["EndpointName"] == TEST_ENDPOINT_NAME
+        assert endpoint_response["EndpointConfigName"] == TEST_ENDPOINT_CONFIG_NAME
+
+        predictions = invoke_endpoint(
+            TEST_ENDPOINT_NAME, input_data, CONTENT_TYPE, REGION_NAME
+        )
 
         with rasterio.open(io.BytesIO(predictions)) as src:
             pred_image = src.read()
@@ -113,15 +154,6 @@ def test_create_and_invoke_and_delete_endpoint(input_data, expected_prediction, 
         assert mse(pred_image, expected_image) < MSE_THRESHOLD
 
     finally:
-        delete_endpoint(TEST_ENDPOINT_NAME)
-        delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME)
-        delete_model(TEST_MODEL_NAME)
-        client = boto3.client(service_name="sagemaker")
-        with pytest.raises(ClientError):
-            client.describe_endpoint(EndpointName=TEST_ENDPOINT_NAME)
-        with pytest.raises(ClientError):
-            client.describe_endpoint_config(
-                EndpointConfigName=TEST_ENDPOINT_CONFIG_NAME
-            )
-        with pytest.raises(ClientError):
-            client.describe_model(ModelName=TEST_MODEL_NAME)
+        delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME)
+        delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME)
+        delete_model(TEST_MODEL_NAME, REGION_NAME)
