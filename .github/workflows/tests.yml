@@ -8,6 +8,7 @@ on:
       - "docs/**"
 jobs:
   build:
+    name: Python ${{ matrix.python-version }} integration tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
