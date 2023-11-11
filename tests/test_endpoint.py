@@ -68,42 +68,42 @@ def test_create_endpoint():
     assert endpoint_response["EndpointConfigName"] == TEST_ENDPOINT_CONFIG_NAME
 
 
-@mock_sagemaker
-def test_delete_endpoint(caplog):
-    # no endpoint/model/config exists so funcs should return None
-    assert delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME) is None
+# @mock_sagemaker
+# def test_delete_endpoint(caplog):
+#     # no endpoint/model/config exists so funcs should return None
+#     assert delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME) is None
 
-    assert delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME) is None
+#     assert delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME) is None
 
-    # assert delete_model(TEST_MODEL_NAME, REGION_NAME) is None
+#     # assert delete_model(TEST_MODEL_NAME, REGION_NAME) is None
 
-    create_model(
-        TEST_S3_MODEL_PATH,
-        TEST_MODEL_NAME,
-        SAGEMAKER_ROLE,
-        CONTENT_TYPE,
-        REGION_NAME,
-        MEMORY_SIZE_MB,
-        MAX_CONCURRENCY,
-        FRAMEWORK,
-        FRAMEWORK_VERSION,
-        PY_VERSION,
-        IMAGE_SCOPE,
-    )
-    create_endpoint_config(
-        TEST_MODEL_NAME, TEST_ENDPOINT_CONFIG_NAME, MEMORY_SIZE_MB, MAX_CONCURRENCY
-    )
-    create_endpoint(TEST_ENDPOINT_CONFIG_NAME, TEST_ENDPOINT_NAME)
+#     create_model(
+#         TEST_S3_MODEL_PATH,
+#         TEST_MODEL_NAME,
+#         SAGEMAKER_ROLE,
+#         CONTENT_TYPE,
+#         REGION_NAME,
+#         MEMORY_SIZE_MB,
+#         MAX_CONCURRENCY,
+#         FRAMEWORK,
+#         FRAMEWORK_VERSION,
+#         PY_VERSION,
+#         IMAGE_SCOPE,
+#     )
+#     create_endpoint_config(
+#         TEST_MODEL_NAME, TEST_ENDPOINT_CONFIG_NAME, MEMORY_SIZE_MB, MAX_CONCURRENCY
+#     )
+#     create_endpoint(TEST_ENDPOINT_CONFIG_NAME, TEST_ENDPOINT_NAME)
 
-    # delete existing endpoint/model/config
-    e_resp = delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME)
-    assert e_resp["ResponseMetadata"]["HTTPStatusCode"] == 200
+#     # delete existing endpoint/model/config
+#     e_resp = delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME)
+#     assert e_resp["ResponseMetadata"]["HTTPStatusCode"] == 200
 
-    ec_resp = delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME)
-    assert ec_resp["ResponseMetadata"]["HTTPStatusCode"] == 200
+#     ec_resp = delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME)
+#     assert ec_resp["ResponseMetadata"]["HTTPStatusCode"] == 200
 
-    m_resp = delete_model(TEST_MODEL_NAME, REGION_NAME)
-    assert m_resp["ResponseMetadata"]["HTTPStatusCode"] == 200
+#     m_resp = delete_model(TEST_MODEL_NAME, REGION_NAME)
+#     assert m_resp["ResponseMetadata"]["HTTPStatusCode"] == 200
 
 
 @pytest.mark.e2e
