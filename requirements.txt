@@ -9,6 +9,7 @@ matplotlib
 rasterio
 scikit-learn
 pytest
+pytest-testmon
 ruff
 black
 isort
