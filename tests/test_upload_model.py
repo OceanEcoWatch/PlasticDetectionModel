@@ -3,8 +3,12 @@ import tarfile
 import boto3
 from moto import mock_s3
 
+from endpoint.upload_model_s3 import (
+    create_tart_gz_in_memory,
+    exclude_pycache,
+    upload_model,
+)
 from tests.conftest import TEST_MODEL_SOURCE_DIR, TEST_S3_BUCKET_NAME, TEST_S3_FILENAME
-from upload_model_s3 import create_tart_gz_in_memory, exclude_pycache, upload_model
 
 
 @mock_s3
