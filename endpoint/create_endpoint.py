@@ -185,8 +185,8 @@ def delete_endpoint(endpoint_name, region_name):
         return
 
 
-def wait_endpoint_creation(endpoint_name):
-    client = boto3.client(service_name="sagemaker")
+def wait_endpoint_creation(endpoint_name, region_name):
+    client = boto3.client(service_name="sagemaker", region_name=region_name)
     describe_endpoint_response = client.describe_endpoint(EndpointName=endpoint_name)
 
     while describe_endpoint_response["EndpointStatus"] == "Creating":
