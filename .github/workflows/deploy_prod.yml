@@ -7,6 +7,7 @@ on:
     paths:
       - "sagemaker/**"
       - "config.py"
+      - ".github/workflows/deploy_prod.yml"
 
 jobs:
   deploy:
