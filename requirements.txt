@@ -1,16 +1,3 @@
 boto3
 sagemaker
 python-dotenv
-segmentation-models-pytorch
-pytorch-lightning
-torch==2.0.1
-wandb
-matplotlib
-rasterio
-scikit-learn
-pytest
-pytest-testmon
-ruff
-black
-isort
-moto
