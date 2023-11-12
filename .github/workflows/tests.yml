@@ -14,13 +14,13 @@ jobs:
       - name: Check for relevant changes
         id: check_changes
         run: |
-          if [ -z "$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} -- ':(exclude).github/**' ':(exclude)docs/**')" ]; then
+          git fetch --depth=1 origin ${{ github.base_ref }}
+          if [ -z "$(git diff --name-only FETCH_HEAD ${{ github.sha }} -- ':(exclude).github/**' ':(exclude)docs/**')" ]; then
             echo "No relevant changes, skipping tests."
             echo "SKIPPING_TESTS=true" >> $GITHUB_ENV
           else
             echo "Relevant changes found."
             echo "SKIPPING_TESTS=false" >> $GITHUB_ENV
-          fi
 
       - name: Checkout code
         if: env.SKIPPING_TESTS == 'false'
