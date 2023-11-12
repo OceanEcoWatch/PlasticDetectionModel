@@ -27,7 +27,7 @@ jobs:
 
       - name: Upload Model to S3
         run: |
-          python endpoint/upload_model.py
+          python endpoint/upload_model_s3.py
         env:
           SAGEMAKER_ROLE: ${{ secrets.SAGEMAKER_ROLE }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
