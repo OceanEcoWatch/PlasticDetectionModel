@@ -11,6 +11,8 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+
       - name: Check for relevant changes
         id: check_changes
         run: |
@@ -22,9 +24,6 @@ jobs:
             echo "Relevant changes found."
             echo "SKIPPING_TESTS=false" >> $GITHUB_ENV
 
-      - name: Checkout code
-        if: env.SKIPPING_TESTS == 'false'
-        uses: actions/checkout@v2
       - name: Set up Python
         if: env.SKIPPING_TESTS == 'false'
         uses: actions/setup-python@v2
