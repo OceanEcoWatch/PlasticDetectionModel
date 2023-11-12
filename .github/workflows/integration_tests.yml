@@ -18,7 +18,7 @@ jobs:
         id: check_changes
         run: |
           git fetch --depth=1 origin ${{ github.base_ref }}
-          if [ -z "$(git diff --name-only FETCH_HEAD ${{ github.sha }} -- ':(exclude).github/**' ':(exclude)docs/**') ':(pytest.ini)'" ]; then
+          if [ -z "$(git diff --name-only FETCH_HEAD ${{ github.sha }} -- ':(exclude).github/**' ':(exclude)docs/**')" ]; then
             echo "No relevant changes, skipping tests."
             echo "SKIPPING_TESTS=true" >> $GITHUB_ENV
           else
