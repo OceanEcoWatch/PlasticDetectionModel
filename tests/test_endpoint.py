@@ -42,6 +42,7 @@ from tests.utils import mse
 
 
 @mock_sagemaker
+@pytest.mark.unit
 def test_create_endpoint():
     mock_model_name = "test_model_name"
     mock_endpoint_config_name = "test_endpoint_config_name"

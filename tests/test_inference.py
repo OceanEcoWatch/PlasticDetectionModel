@@ -8,11 +8,13 @@ from tests.conftest import MSE_THRESHOLD
 from tests.utils import mse
 
 
+@pytest.mark.unit
 def test_model_fn():
     model = model_fn(". ")
     assert hasattr(model, "predict")
 
 
+@pytest.mark.unit
 def test_input_fn(input_data):
     image, meta = input_fn(input_data, "application/octet-stream")
     assert image.shape == (13, 500, 250)
@@ -23,11 +25,13 @@ def test_input_fn(input_data):
     assert meta["driver"] == "GTiff"
 
 
+@pytest.mark.unit
 def test_input_fn_content_type_error(input_data):
     with pytest.raises(ValueError):
         input_fn(b"test", "application/json")
 
 
+@pytest.mark.unit
 def test_predict_fn(np_data, model, expected_prediction):
     org_src, org_image, org_meta = np_data
     pred_result = predict_fn(np_data[1:], model=model)
@@ -58,11 +62,13 @@ def test_predict_fn(np_data, model, expected_prediction):
     assert mse(image_data, expected_image) < MSE_THRESHOLD
 
 
+@pytest.mark.unit
 def test_output_fn(expected_prediction):
     output = output_fn(expected_prediction, "application/octet-stream")
     assert isinstance(output, bytes)
 
 
+@pytest.mark.unit
 def test_output_fn_content_type_error(expected_prediction):
     with pytest.raises(ValueError):
         output_fn(expected_prediction, "application/json")
