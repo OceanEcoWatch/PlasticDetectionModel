@@ -3,9 +3,7 @@ name: Format and Lint
 on:
   pull_request:
     branches: [main]
-    paths-ignore:
-      - ".github/**"
-      - "docs/**"
+
 jobs:
   build:
     name: Format and Lint
