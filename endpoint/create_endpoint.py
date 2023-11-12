@@ -221,4 +221,4 @@ if __name__ == "__main__":
         MODEL_NAME, ENDPOINT_CONFIG_NAME, MEMORY_SIZE_MB, MAX_CONCURRENCY
     )
     create_endpoint(ENDPOINT_CONFIG_NAME, ENDPOINT_NAME)
-    wait_endpoint_creation(ENDPOINT_NAME)
+    wait_endpoint_creation(ENDPOINT_NAME, REGION_NAME)
