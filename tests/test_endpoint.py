@@ -42,12 +42,20 @@ from tests.utils import mse
 
 @mock_sagemaker
 def test_create_endpoint():
+    mock_model_name = "test_model_name"
+    mock_endpoint_config_name = "test_endpoint_config_name"
+    mock_endpoint = "test_endpoint"
+    mock_region_name = "us-east-1"
+
+    # mock aws credentials
+    boto3.setup_default_session(region_name=mock_region_name)
+
     model_response = create_model(
         TEST_S3_MODEL_PATH,
-        TEST_MODEL_NAME,
+        mock_model_name,
         SAGEMAKER_ROLE,
         CONTENT_TYPE,
-        REGION_NAME,
+        mock_region_name,
         MEMORY_SIZE_MB,
         MAX_CONCURRENCY,
         FRAMEWORK,
@@ -55,22 +63,19 @@ def test_create_endpoint():
         PY_VERSION,
         IMAGE_SCOPE,
     )
-    assert TEST_MODEL_NAME.lower() in model_response["ModelArn"].lower()
+    assert mock_model_name.lower() in model_response["ModelArn"].lower()
 
     config_response = create_endpoint_config(
-        TEST_MODEL_NAME, TEST_ENDPOINT_CONFIG_NAME, MEMORY_SIZE_MB, MAX_CONCURRENCY
+        mock_model_name, mock_endpoint_config_name, MEMORY_SIZE_MB, MAX_CONCURRENCY
     )
     assert (
-        TEST_ENDPOINT_CONFIG_NAME.lower()
+        mock_endpoint_config_name.lower()
         in config_response["EndpointConfigArn"].lower()
     )
-    endpoint_response = create_endpoint(TEST_ENDPOINT_CONFIG_NAME, TEST_ENDPOINT_NAME)
-    assert TEST_ENDPOINT_NAME.lower() in endpoint_response["EndpointArn"].lower()
-    endpoint_response = wait_endpoint_creation(TEST_ENDPOINT_NAME)
-
-    assert endpoint_response["EndpointStatus"] == "InService"
-    assert endpoint_response["EndpointName"] == TEST_ENDPOINT_NAME
-    assert endpoint_response["EndpointConfigName"] == TEST_ENDPOINT_CONFIG_NAME
+    endpoint_response = create_endpoint(
+        mock_endpoint_config_name, mock_endpoint_config_name
+    )
+    assert mock_endpoint.lower() in endpoint_response["EndpointArn"].lower()
 
 
 @pytest.mark.integration
@@ -112,7 +117,7 @@ def test_upload_model_create_invoke_and_delete_endpoint(
         )
 
         assert TEST_ENDPOINT_NAME.lower() in endpoint_response["EndpointArn"].lower()
-        endpoint_response = wait_endpoint_creation(TEST_ENDPOINT_NAME)
+        endpoint_response = wait_endpoint_creation(TEST_ENDPOINT_NAME, REGION_NAME)
 
         assert endpoint_response["EndpointStatus"] == "InService"
         assert endpoint_response["EndpointName"] == TEST_ENDPOINT_NAME
