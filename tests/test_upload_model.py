@@ -1,6 +1,7 @@
 import tarfile
 
 import boto3
+import pytest
 from moto import mock_s3
 
 from config import MODEL_SOURCE_DIR
@@ -12,6 +13,7 @@ from endpoint.upload_model_s3 import (
 from tests.conftest import TEST_S3_BUCKET_NAME, TEST_S3_FILENAME
 
 
+@pytest.mark.unit
 @mock_s3
 def test_upload_model():
     conn = boto3.resource("s3", region_name="us-east-1")
@@ -26,6 +28,7 @@ def test_upload_model():
     assert result
 
 
+@pytest.mark.unit
 def test_create_tart_gz_in_memory():
     result = create_tart_gz_in_memory(
         source_dir=MODEL_SOURCE_DIR,
