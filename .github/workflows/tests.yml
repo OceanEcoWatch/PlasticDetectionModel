@@ -23,7 +23,7 @@ jobs:
           else
             echo "Relevant changes found."
             echo "SKIPPING_TESTS=false" >> $GITHUB_ENV
-
+          fi
       - name: Set up Python
         if: env.SKIPPING_TESTS == 'false'
         uses: actions/setup-python@v2
