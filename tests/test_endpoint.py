@@ -7,6 +7,7 @@ from moto import mock_sagemaker
 
 from config import (
     CONTENT_TYPE,
+    ENDPOINT_NAME,
     FRAMEWORK,
     FRAMEWORK_VERSION,
     IMAGE_SCOPE,
@@ -141,3 +142,21 @@ def test_upload_model_create_invoke_and_delete_endpoint(
         delete_model(TEST_MODEL_NAME, REGION_NAME)
         client = boto3.client("s3", region_name=REGION_NAME)
         client.delete_object(Bucket=TEST_S3_BUCKET_NAME, Key=TEST_S3_FILENAME)
+
+
+@pytest.mark.e2e
+def test_endpoint_invoke_in_production(input_data, expected_prediction):
+    predictions = invoke_endpoint(
+        ENDPOINT_NAME,
+        input_data,
+        CONTENT_TYPE,
+        REGION_NAME,
+    )
+
+    with rasterio.open(io.BytesIO(predictions)) as src:
+        pred_image = src.read()
+    with rasterio.open(io.BytesIO(expected_prediction)) as src:
+        expected_image = src.read()
+    assert pred_image.shape == expected_image.shape
+    assert pred_image.dtype == expected_image.dtype
+    assert mse(pred_image, expected_image) < MSE_THRESHOLD
