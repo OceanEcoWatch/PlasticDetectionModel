@@ -1,4 +1,7 @@
-[![Deploy](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/deploy_prod.yml/badge.svg)](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/deploy_prod.yml)[Tests](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/tests.yml/badge.svg)(https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/tests.yml)
+[![Deploy](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/deploy_prod.yml/badge.svg)](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/deploy_prod.yml)
+
+[![Tests](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/tests.yml/badge.svg)](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/tests.yml)
+
 [![Format and Lint](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/format_lint.yml/badge.svg)](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/format_lint.yml)
 
 # PlasticDetectionModel
