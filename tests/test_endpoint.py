@@ -1,5 +1,6 @@
 import io
 
+import boto3
 import pytest
 import rasterio
 from moto import mock_sagemaker
@@ -11,6 +12,7 @@ from config import (
     IMAGE_SCOPE,
     MAX_CONCURRENCY,
     MEMORY_SIZE_MB,
+    MODEL_SOURCE_DIR,
     PY_VERSION,
     REGION_NAME,
     SAGEMAKER_ROLE,
@@ -25,11 +27,14 @@ from endpoint.create_endpoint import (
     wait_endpoint_creation,
 )
 from endpoint.invoke_endpoint import invoke_endpoint
+from endpoint.upload_model_s3 import upload_model
 from tests.conftest import (
     MSE_THRESHOLD,
     TEST_ENDPOINT_CONFIG_NAME,
     TEST_ENDPOINT_NAME,
     TEST_MODEL_NAME,
+    TEST_S3_BUCKET_NAME,
+    TEST_S3_FILENAME,
     TEST_S3_MODEL_PATH,
 )
 from tests.utils import mse
@@ -68,47 +73,19 @@ def test_create_endpoint():
     assert endpoint_response["EndpointConfigName"] == TEST_ENDPOINT_CONFIG_NAME
 
 
-# @mock_sagemaker
-# def test_delete_endpoint(caplog):
-#     # no endpoint/model/config exists so funcs should return None
-#     assert delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME) is None
-
-#     assert delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME) is None
-
-#     # assert delete_model(TEST_MODEL_NAME, REGION_NAME) is None
-
-#     create_model(
-#         TEST_S3_MODEL_PATH,
-#         TEST_MODEL_NAME,
-#         SAGEMAKER_ROLE,
-#         CONTENT_TYPE,
-#         REGION_NAME,
-#         MEMORY_SIZE_MB,
-#         MAX_CONCURRENCY,
-#         FRAMEWORK,
-#         FRAMEWORK_VERSION,
-#         PY_VERSION,
-#         IMAGE_SCOPE,
-#     )
-#     create_endpoint_config(
-#         TEST_MODEL_NAME, TEST_ENDPOINT_CONFIG_NAME, MEMORY_SIZE_MB, MAX_CONCURRENCY
-#     )
-#     create_endpoint(TEST_ENDPOINT_CONFIG_NAME, TEST_ENDPOINT_NAME)
-
-#     # delete existing endpoint/model/config
-#     e_resp = delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME)
-#     assert e_resp["ResponseMetadata"]["HTTPStatusCode"] == 200
-
-#     ec_resp = delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME)
-#     assert ec_resp["ResponseMetadata"]["HTTPStatusCode"] == 200
-
-#     m_resp = delete_model(TEST_MODEL_NAME, REGION_NAME)
-#     assert m_resp["ResponseMetadata"]["HTTPStatusCode"] == 200
-
-
 @pytest.mark.integration
-def test_create_and_invoke_and_delete_endpoint(input_data, expected_prediction, caplog):
+def test_upload_model_create_invoke_and_delete_endpoint(
+    input_data, expected_prediction
+):
+    delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME)
+    delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME)
+    delete_model(TEST_MODEL_NAME, REGION_NAME)
     try:
+        upload_model(
+            source_dir=MODEL_SOURCE_DIR,
+            bucket_name=TEST_S3_BUCKET_NAME,
+            object_name=TEST_S3_FILENAME,
+        )
         model_response = create_model(
             TEST_S3_MODEL_PATH,
             TEST_MODEL_NAME,
@@ -157,3 +134,5 @@ def test_create_and_invoke_and_delete_endpoint(input_data, expected_prediction, 
         delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME)
         delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME)
         delete_model(TEST_MODEL_NAME, REGION_NAME)
+        client = boto3.client("s3", region_name=REGION_NAME)
+        client.delete_object(Bucket=TEST_S3_BUCKET_NAME, Key=TEST_S3_FILENAME)

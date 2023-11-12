@@ -1,9 +1,9 @@
 import io
-from code.inference import input_fn, model_fn, output_fn, predict_fn
 
 import pytest
 import rasterio
 
+from sagemaker_model.code.inference import input_fn, model_fn, output_fn, predict_fn
 from tests.conftest import MSE_THRESHOLD
 from tests.utils import mse
 
