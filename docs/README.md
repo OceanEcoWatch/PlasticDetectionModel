@@ -6,4 +6,4 @@ Customized [marinedebrisdetector](https://github.com/MarcCoru/marinedebrisdetect
 
 ## CI/CD Diagram
 
-[CI/CD Diagram](docs/PlasticDetectionModel.png)
+[CI/CD Diagram](https://github.com/OceanEcoWatch/PlasticDetectionModel/blob/main/docs/PlasticDetectionModel.png)
