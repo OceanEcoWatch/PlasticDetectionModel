@@ -56,7 +56,7 @@ jobs:
 
       - name: Run tests with testmon
         if: env.SKIPPING_TESTS == 'false'
-        run: python -m pytest -vv --testmon -m 'not integration'
+        run: python -m pytest -vv --testmon -m 'unit'
         env:
           SAGEMAKER_ROLE: ${{ secrets.SAGEMAKER_ROLE }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
