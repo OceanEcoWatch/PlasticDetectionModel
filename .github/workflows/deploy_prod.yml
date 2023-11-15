@@ -8,7 +8,7 @@ on:
       - "sagemaker/**"
       - "config.py"
       - ".github/workflows/deploy_prod.yml"
-
+  workflow_dispatch:
 jobs:
   deploy:
     name: Deploy
