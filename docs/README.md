@@ -1,5 +1,7 @@
 # PlasticDetectionModel
 
+[![E2E Tests](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/e2e_test.yml/badge.svg?event=deployment)](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/e2e_test.yml)
+
 [![Deploy](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/deploy_prod.yml/badge.svg)](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/deploy_prod.yml)
 
 [![Integration Tests](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/integration_tests.yml/badge.svg)](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/integration_tests.yml)
