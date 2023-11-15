@@ -1,10 +1,9 @@
 name: Integration Tests
 
 on:
-  workflow_run:
-    workflows: ["Unit Tests"]
-    types:
-      - completed
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
