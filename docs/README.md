@@ -6,7 +6,10 @@
 [![Unit Tests](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/unit_tests.yml/badge.svg)](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/unit_tests.yml)
 [![Format and Lint](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/format_lint.yml/badge.svg)](https://github.com/OceanEcoWatch/PlasticDetectionModel/actions/workflows/format_lint.yml)
 
-Customized [marinedebrisdetector](https://github.com/MarcCoru/marinedebrisdetector/tree/main) deployed on [Sagemaker serverless inference](https://docs.aws.amazon.com/sagemaker/latest/dg/serverless-endpoints.html)
+
+PlasticDetectionModel is a machine learning model used for detecting marine debris, specifically plastic, from Sentinel-2 L2A satellite images. The model is customized from the [marinedebrisdetector](https://github.com/MarcCoru/marinedebrisdetector/tree/main) to work in memory on a serverless cloud infrastructure. This repository contains the code and resources necessary for deploying the model on [Sagemaker serverless inference](https://docs.aws.amazon.com/sagemaker/latest/dg/serverless-endpoints.html). This repository is part of a larger pipeline aimed at identifying marine debris on a schedule. [PlasticDetectionService](https://github.com/OceanEcoWatch/PlasticDetectionService). 
+Ultimately, the predictions will be displayed on our [mapping application](https://github.com/OceanEcoWatch/website)
+
 
 ## CI/CD Diagram
 
