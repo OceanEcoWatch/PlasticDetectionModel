@@ -6,8 +6,8 @@ import io  # noqa
 
 import pytest  # noqa
 import rasterio  # noqa
-from marinedebrisdetector.checkpoints import CHECKPOINTS  # noqa
-from marinedebrisdetector.model.segmentation_model import SegmentationModel  # noqa
+from marinedebrisdetector_mod.checkpoints import CHECKPOINTS  # noqa
+from marinedebrisdetector_mod.model.segmentation_model import SegmentationModel  # noqa
 
 MSE_THRESHOLD = 0.01
 TEST_MODEL_NAME = "TestMarineDebrisDetectorModel"
