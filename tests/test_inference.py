@@ -70,7 +70,7 @@ def test_predict_fn(np_data, model, expected_prediction):
 @pytest.mark.unit
 @pytest.mark.slow
 def test_predict_fn_whole_durban_scene(model):
-    expected_pred_path = "tests/data/exp_durban_20190424_prediction.tif"
+    expected_pred_path = "tests/data/exp_durban_20190424_prediction.tiff"
     durban_scene = _download_durban()
 
     with rasterio.open(io.BytesIO(durban_scene)) as org_src:
@@ -81,7 +81,7 @@ def test_predict_fn_whole_durban_scene(model):
     pred_result = predict_fn(input_data, model=model)
 
     #save prediction to file for later inspection
-    with open("tests/data/last_durban_20190424_prediction.tif", "wb") as f:
+    with open("tests/data/last_durban_20190424_prediction.tiff", "wb") as f:
         f.write(pred_result)
 
     with rasterio.open(io.BytesIO(pred_result)) as pred_src:
