@@ -2,8 +2,8 @@ import numpy as np
 import pytorch_lightning as pl
 import torch
 import wandb
-from marinedebrisdetector.metrics import calculate_metrics, get_loss
-from marinedebrisdetector.model.model import get_model
+from marinedebrisdetector_mod.metrics import calculate_metrics, get_loss
+from marinedebrisdetector_mod.model.model import get_model
 from sklearn.metrics import precision_recall_curve
 from torch.optim import Adam
 
