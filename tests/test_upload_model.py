@@ -36,7 +36,7 @@ def test_create_tart_gz_in_memory():
     )
     with tarfile.open(fileobj=result, mode="r:gz") as tar:
         assert "code/inference.py" in tar.getnames()
-        assert "code/marinedebrisdetector" in tar.getnames()
+        assert "code/marinedebrisdetector_mod" in tar.getnames()
         assert not any("__pycache__" in name for name in tar.getnames())
 
     assert result.readable()

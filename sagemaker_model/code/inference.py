@@ -4,9 +4,9 @@ import ssl
 
 import rasterio
 import torch
-from marinedebrisdetector.checkpoints import CHECKPOINTS
-from marinedebrisdetector.model.segmentation_model import SegmentationModel
-from marinedebrisdetector.predictor import predict
+from marinedebrisdetector_mod.checkpoints import CHECKPOINTS
+from marinedebrisdetector_mod.model.segmentation_model import SegmentationModel
+from marinedebrisdetector_mod.predictor import predict
 
 logging.basicConfig(level=logging.INFO)
 

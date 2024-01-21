@@ -4,7 +4,7 @@ import logging
 import numpy as np
 import rasterio
 import torch
-from marinedebrisdetector.model.segmentation_model import SegmentationModel
+from marinedebrisdetector_mod.model.segmentation_model import SegmentationModel
 
 logging.basicConfig(level=logging.INFO)
 
