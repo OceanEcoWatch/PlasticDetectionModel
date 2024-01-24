@@ -3,6 +3,7 @@ import sys
 sys.path.append("sagemaker_model/code")
 
 import io  # noqa
+
 import numpy as np  # noqa
 import pytest  # noqa
 import rasterio  # noqa

@@ -88,6 +88,7 @@ def test_upload_model_create_invoke_and_delete_endpoint(
     # print the storage size of the input data
     print("input_data size: ", sys.getsizeof(input_data))
 
+
     delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME)
     delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME)
     delete_model(TEST_MODEL_NAME, REGION_NAME)
