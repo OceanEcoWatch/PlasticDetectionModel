@@ -47,8 +47,7 @@ def input_fn(request_body, request_content_type):
     if request_content_type == "application/octet-stream":
         with rasterio.open(io.BytesIO(request_body)) as src:
             image = src.read()
-            meta = src.meta.copy()
-            return image, meta
+            return image
     else:
         raise ValueError(f"Unsupported content type: {request_content_type}")
 
@@ -58,11 +57,9 @@ def predict_fn(input_data, model):
     LOGGER.info(f"Predicting on {processing_unit}")
     prediction = predict(
         model,
-        image=input_data[0],
-        metadata=input_data[1],
+        image=input_data,
         device=processing_unit,
     )
-    LOGGER.info(f"Prediction: {prediction}")
     return prediction
 
 

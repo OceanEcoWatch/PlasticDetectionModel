@@ -1,8 +1,14 @@
 import io
+import tempfile
+from itertools import product
 
+import numpy as np
 import pytest
 import rasterio
 import requests
+from rasterio.windows import Window
+from scipy.ndimage import gaussian_filter
+from tqdm import tqdm
 
 from sagemaker_model.code.inference import input_fn, model_fn, output_fn, predict_fn
 from tests.conftest import MSE_THRESHOLD
@@ -14,6 +20,7 @@ def _download_durban():
     r = requests.get(url)
     return r.content
 
+
 @pytest.mark.unit
 def test_model_fn():
     model = model_fn(". ")
@@ -22,13 +29,8 @@ def test_model_fn():
 
 @pytest.mark.unit
 def test_input_fn(input_data):
-    image, meta = input_fn(input_data, "application/octet-stream")
-    assert image.shape == (13, 500, 250)
-    assert meta["height"] == 500
-    assert meta["width"] == 250
-    assert meta["count"] == 13
-    assert meta["dtype"] == "uint16"
-    assert meta["driver"] == "GTiff"
+    image = input_fn(input_data, "application/octet-stream")
+    assert image.shape == (12, 480, 480)
 
 
 @pytest.mark.unit
@@ -38,63 +40,109 @@ def test_input_fn_content_type_error(input_data):
 
 
 @pytest.mark.unit
-def test_predict_fn(np_data, model, expected_prediction):
-    org_src, org_image, org_meta = np_data
-    pred_result = predict_fn(np_data[1:], model=model)
-    assert isinstance(pred_result, bytes)
+def test_predict_fn(np_data, model, expected_y_score):
+    _, org_image, _ = np_data
+    y_score = predict_fn(org_image, model=model)
+    assert isinstance(y_score, np.ndarray)
 
-    with io.BytesIO(pred_result) as buffer:
-        with rasterio.open(buffer) as src:
-            image_data = src.read()
-            meta = src.meta.copy()
-    assert image_data.shape == (1, org_image.shape[1], org_image.shape[2])
-    assert meta["height"] == org_meta["height"]
-    assert meta["width"] == org_meta["width"]
-    assert meta["count"] == 1
-    assert meta["dtype"] == "uint8"
-    assert meta["driver"] == "GTiff"
+    np.testing.assert_allclose(y_score, expected_y_score, rtol=1e-6)
 
-    # check that prediction is in same geographic location as input
-    assert src.bounds == org_src.bounds
-    assert src.transform == org_src.transform
-    assert src.crs == org_src.crs
 
-    # check that prediction is similar to expected prediction
-    with rasterio.open(io.BytesIO(expected_prediction)) as src:
-        expected_image = src.read()
-    assert image_data.shape == expected_image.shape
-    assert image_data.dtype == expected_image.dtype
-
-    assert mse(image_data, expected_image) < MSE_THRESHOLD
-
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.slow
-def test_predict_fn_whole_durban_scene(model):
-    expected_pred_path = "tests/data/exp_durban_20190424_prediction.tiff"
-    durban_scene = _download_durban()
+def test_predict_fn_with_windowing(model, expected_prediction, input_data):
+    pred_path = "tests/data/last_2400_1440_prediction.tiff"
+    image_size = (480, 480)
+    offset = 64
 
-    with rasterio.open(io.BytesIO(durban_scene)) as org_src:
-        org_image = org_src.read()
-        org_meta = org_src.meta.copy()
+    with rasterio.open(io.BytesIO(input_data)) as org_src:
+        meta = org_src.meta.copy()
 
-    input_data = input_fn(durban_scene, "application/octet-stream")
-    pred_result = predict_fn(input_data, model=model)
+    model = model.to("cpu")
+    model.eval()
+    meta["count"] = 1
+    meta["dtype"] = "uint8"
 
-    #save prediction to file for later inspection
-    with open("tests/data/last_durban_20190424_prediction.tiff", "wb") as f:
-        f.write(pred_result)
+    rows = np.arange(0, meta["height"], image_size[0])
+    cols = np.arange(0, meta["width"], image_size[1])
+    image_window = Window(0, 0, meta["width"], meta["height"])
 
-    with rasterio.open(io.BytesIO(pred_result)) as pred_src:
-        image_data = pred_src.read()
-        meta = pred_src.meta.copy()
+    with tempfile.NamedTemporaryFile() as tmpfile:
+        with rasterio.open(tmpfile.name, "w+", **meta) as dst:
+            for r, c in tqdm(
+                product(rows, cols), total=len(rows) * len(cols), leave=False
+            ):
+                H, W = image_size
+
+                window = image_window.intersection(
+                    Window(c - offset, r - offset, W + offset, H + offset)
+                )
+
+                with rasterio.open(io.BytesIO(input_data)) as src:
+                    image = src.read(window=window)
+                b, h, w = image.shape
+                if b > 12:
+                    image = image[:12]
+
+                H, W = image_size
+                H, W = H + offset * 2, W + offset * 2
+
+                dh = (H - h) / 2
+                dw = (W - w) / 2
+                image = np.pad(
+                    image,
+                    [
+                        (0, 0),
+                        (int(np.ceil(dh)), int(np.floor(dh))),
+                        (int(np.ceil(dw)), int(np.floor(dw))),
+                    ],
+                )
+                y_score = predict_fn(image, model=model)
+
+                # unpad
+                y_score = y_score[
+                    int(np.ceil(dh)) : y_score.shape[0] - int(np.floor(dh)),
+                    int(np.ceil(dw)) : y_score.shape[1] - int(np.floor(dw)),
+                ]
+                assert y_score.shape[0] == window.height, "unpadding size mismatch"
+                assert y_score.shape[1] == window.width, "unpadding size mismatch"
+
+                data = dst.read(window=window)[0] / 255
+                overlap = data > 0
+
+                if overlap.any():
+                    # smooth transition in overlapping regions
+                    dx, dy = np.gradient(overlap.astype(float))  # get border
+                    g = np.abs(dx) + np.abs(dy)
+                    transition = gaussian_filter(g, sigma=offset / 2)
+                    transition /= transition.max()
+                    transition[~overlap] = 1.0  # normalize to 1
+
+                    y_score = transition * y_score + (1 - transition) * data
+
+                writedata = (
+                    np.expand_dims(y_score, 0).astype(np.float32) * 255
+                ).astype(np.uint8)
+                dst.write(writedata, window=window)
+
+        tmpfile.seek(0)
+        pred_bytes = tmpfile.read()
+
+    # save prediction to file
+    with open(pred_path, "wb") as f:
+        f.write(pred_bytes)
+
+    with rasterio.open(io.BytesIO(pred_bytes)) as pred_src:
+        pred_image = pred_src.read()
+        pred_meta = pred_src.meta.copy()
 
     # check that prediction is in same dimensions as input
-    assert image_data.shape == (1, org_image.shape[1], org_image.shape[2])
-    assert meta["height"] == org_meta["height"]
-    assert meta["width"] == org_meta["width"]
-    assert meta["count"] == 1
-    assert meta["dtype"] == "uint8"
-    assert meta["driver"] == "GTiff"
+    assert pred_image.shape == (1, meta["height"], meta["width"])
+    assert pred_meta["height"] == meta["height"]
+    assert pred_meta["width"] == meta["width"]
+    assert pred_meta["count"] == 1
+    assert pred_meta["dtype"] == "uint8"
+    assert pred_meta["driver"] == "GTiff"
 
     # check that prediction is in same geographic location as input
     assert pred_src.bounds == org_src.bounds
@@ -102,15 +150,13 @@ def test_predict_fn_whole_durban_scene(model):
     assert pred_src.crs == org_src.crs
 
     # compare with marinedebrisdetector original expected prediction
-    with rasterio.open(expected_pred_path) as exp_src:
+    with rasterio.open(io.BytesIO(expected_prediction)) as exp_src:
         expected_image = exp_src.read()
-    assert image_data.shape == expected_image.shape
-    assert image_data.dtype == expected_image.dtype
+    assert pred_image.shape == expected_image.shape
+    assert pred_image.dtype == expected_image.dtype
 
     # check that prediction is similar to expected prediction
-    assert mse(image_data, expected_image) < MSE_THRESHOLD
-
-
+    assert mse(pred_image, expected_image) < MSE_THRESHOLD
 
 
 @pytest.mark.unit

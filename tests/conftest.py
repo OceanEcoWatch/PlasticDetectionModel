@@ -3,7 +3,7 @@ import sys
 sys.path.append("sagemaker_model/code")
 
 import io  # noqa
-
+import numpy as np  # noqa
 import pytest  # noqa
 import rasterio  # noqa
 from marinedebrisdetector_mod.checkpoints import CHECKPOINTS  # noqa
@@ -22,7 +22,7 @@ TEST_S3_MODEL_PATH = f"s3://{TEST_S3_BUCKET_NAME}/{TEST_S3_FILENAME}"
 @pytest.fixture
 def input_data():
     with open(
-        "tests/data/test_image.tiff",
+        "tests/data/2400_1440.tiff",
         "rb",
     ) as f:
         return f.read()
@@ -49,7 +49,16 @@ def model():
 @pytest.fixture
 def expected_prediction():
     with open(
-        "tests/data/prediction.tiff",
+        "tests/data/exp_2400_1440_prediction.tiff",
         "rb",
     ) as f:
         return f.read()
+
+
+@pytest.fixture
+def expected_y_score():
+    with open(
+        "tests/data/exp_y_score.npy",
+        "rb",
+    ) as f:
+        return np.load(f)
