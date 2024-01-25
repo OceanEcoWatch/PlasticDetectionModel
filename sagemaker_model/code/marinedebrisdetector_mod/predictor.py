@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 import torch
-from marinedebrisdetector_mod.model.marine_debris_detector import MarineDebrisDetector
+from marinedebrisdetector_mod.model.segmentation_model import SegmentationModel
 
 logging.basicConfig(level=logging.INFO)
 
@@ -11,7 +11,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def predict(
-    model: MarineDebrisDetector,
+    model: SegmentationModel,
     image: np.ndarray,
     device: str = "cpu",
     activation: str = "sigmoid",

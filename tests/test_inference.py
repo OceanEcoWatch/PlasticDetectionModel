@@ -46,13 +46,12 @@ def test_predict_fn(np_data, model, expected_y_score):
     y_score = predict_fn(org_image, model=model)
 
     assert isinstance(y_score, np.ndarray)
-
     np.testing.assert_allclose(y_score, expected_y_score, rtol=1e-6)
 
 
 @pytest.mark.integration
 @pytest.mark.slow
-def test_inference_with_windowing(expected_prediction, input_data):
+def test_inference_with_windowing(expected_prediction, input_data, expected_y_score):
     pred_path = "tests/data/last_2400_1440_prediction.tiff"
     image_size = (480, 480)
     offset = 64
@@ -86,6 +85,12 @@ def test_inference_with_windowing(expected_prediction, input_data):
                 dtype = response["dtype"]
 
                 y_score = np.frombuffer(byte_data, dtype=dtype).reshape(shape)
+
+                # y_score same after serialization and deserialization
+                np.testing.assert_allclose(y_score, _y_score, rtol=1e-6)
+
+                # y_score same as expected prediction
+                np.testing.assert_allclose(y_score, expected_y_score, rtol=1e-6)
 
                 assert y_score.shape[0] == window.height, "unpadding size mismatch"
                 assert y_score.shape[1] == window.width, "unpadding size mismatch"

@@ -46,7 +46,7 @@ def model():
         strict=False,
         map_location="cpu",
     )
-    return detector
+    return detector.to("cpu")
 
 
 @pytest.fixture
