@@ -1,30 +1,25 @@
+import base64
 import io
+import json
 import tempfile
 from itertools import product
 
 import numpy as np
 import pytest
 import rasterio
-import requests
 from rasterio.windows import Window
 from scipy.ndimage import gaussian_filter
 from tqdm import tqdm
 
 from sagemaker_model.code.inference import input_fn, model_fn, output_fn, predict_fn
-from tests.conftest import MSE_THRESHOLD
+from tests.conftest import MSE_THRESHOLD, TEST_S3_IMAGE_PATH
 from tests.utils import mse
-
-
-def _download_durban():
-    url = "https://marinedebrisdetector.s3.eu-central-1.amazonaws.com/data/durban_20190424.tif"
-    r = requests.get(url)
-    return r.content
 
 
 @pytest.mark.unit
 def test_model_fn():
-    model = model_fn(". ")
-    assert hasattr(model, "predict")
+    model = model_fn("sagemaker_model/code")
+    assert type(model).__name__ == "SegmentationModel"
 
 
 @pytest.mark.unit
@@ -33,16 +28,23 @@ def test_input_fn(input_data):
     assert image.shape == (12, 480, 480)
 
 
+@pytest.mark.integration
+def test_input_fn_json_get_from_s3():
+    image = input_fn(TEST_S3_IMAGE_PATH, "application/json")
+    assert image.shape == (12, 480, 480)
+
+
 @pytest.mark.unit
-def test_input_fn_content_type_error(input_data):
+def test_input_fn_content_type_error():
     with pytest.raises(ValueError):
-        input_fn(b"test", "application/json")
+        input_fn(b"test", "application/text")
 
 
 @pytest.mark.unit
 def test_predict_fn(np_data, model, expected_y_score):
     _, org_image, _ = np_data
     y_score = predict_fn(org_image, model=model)
+
     assert isinstance(y_score, np.ndarray)
 
     np.testing.assert_allclose(y_score, expected_y_score, rtol=1e-6)
@@ -50,16 +52,14 @@ def test_predict_fn(np_data, model, expected_y_score):
 
 @pytest.mark.integration
 @pytest.mark.slow
-def test_predict_fn_with_windowing(model, expected_prediction, input_data):
+def test_inference_with_windowing(expected_prediction, input_data):
     pred_path = "tests/data/last_2400_1440_prediction.tiff"
     image_size = (480, 480)
     offset = 64
-
+    model = model_fn("sagemaker_model/code")
     with rasterio.open(io.BytesIO(input_data)) as org_src:
         meta = org_src.meta.copy()
 
-    model = model.to("cpu")
-    model.eval()
     meta["count"] = 1
     meta["dtype"] = "uint8"
 
@@ -77,33 +77,16 @@ def test_predict_fn_with_windowing(model, expected_prediction, input_data):
                 window = image_window.intersection(
                     Window(c - offset, r - offset, W + offset, H + offset)
                 )
-
-                with rasterio.open(io.BytesIO(input_data)) as src:
-                    image = src.read(window=window)
-                b, h, w = image.shape
-                if b > 12:
-                    image = image[:12]
-
-                H, W = image_size
-                H, W = H + offset * 2, W + offset * 2
-
-                dh = (H - h) / 2
-                dw = (W - w) / 2
-                image = np.pad(
-                    image,
-                    [
-                        (0, 0),
-                        (int(np.ceil(dh)), int(np.floor(dh))),
-                        (int(np.ceil(dw)), int(np.floor(dw))),
-                    ],
+                _y_score = predict_fn(
+                    input_fn(input_data, "application/octet-stream"), model=model
                 )
-                y_score = predict_fn(image, model=model)
+                response = json.loads(output_fn(_y_score, "application/octet-stream"))
+                byte_data = base64.b64decode(response["data"])
+                shape = tuple(response["shape"])
+                dtype = response["dtype"]
 
-                # unpad
-                y_score = y_score[
-                    int(np.ceil(dh)) : y_score.shape[0] - int(np.floor(dh)),
-                    int(np.ceil(dw)) : y_score.shape[1] - int(np.floor(dw)),
-                ]
+                y_score = np.frombuffer(byte_data, dtype=dtype).reshape(shape)
+
                 assert y_score.shape[0] == window.height, "unpadding size mismatch"
                 assert y_score.shape[1] == window.width, "unpadding size mismatch"
 
@@ -160,12 +143,12 @@ def test_predict_fn_with_windowing(model, expected_prediction, input_data):
 
 
 @pytest.mark.unit
-def test_output_fn(expected_prediction):
-    output = output_fn(expected_prediction, "application/octet-stream")
-    assert isinstance(output, bytes)
+def test_output_fn(expected_y_score):
+    output = output_fn(expected_y_score, "application/octet-stream")
+    assert isinstance(output, str)
 
 
 @pytest.mark.unit
-def test_output_fn_content_type_error(expected_prediction):
+def test_output_fn_content_type_error(expected_y_score):
     with pytest.raises(ValueError):
-        output_fn(expected_prediction, "application/json")
+        output_fn(expected_y_score, "application/xml")

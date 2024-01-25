@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-from tqdm import tqdm
 
 
 class MarineDebrisDetector(nn.Module):
@@ -53,9 +52,6 @@ class MarineDebrisDetector(nn.Module):
         else:
             y_score = torch.sigmoid(self.model(X.to(self.device)))
 
-            # re-normalize scores to be at 0.5
-            # y_score = normalize(y_score, self.model)
-
             return y_score, y_score > self.model.threshold
 
 
@@ -78,91 +74,3 @@ class TestTimeAugmentationWrapper(torch.nn.Module):
         y_logits /= 6
 
         return y_logits
-
-
-def normalize(score, model):
-    return score * 0.5 / model.threshold
-
-
-def plot_qualitative(detector):
-    import numpy as np
-
-    download_qualitative()
-
-    X = np.load("qualitative_test.npz")["X"]
-    Y = np.load("qualitative_test.npz")["Y"]
-    ids = np.load("qualitative_test.npz")["ids"]
-
-    X = torch.from_numpy(X).float()
-
-    with torch.no_grad():
-        y_pred, y_score = detector(X)
-
-    import matplotlib.pyplot as plt
-    from marinedebrisdetector.visualization import fdi, rgb
-
-    N = X.shape[0]
-    fig, axs = plt.subplots(N, 5, figsize=(5 * 3, N * 3))
-
-    for ax, title in zip(axs[0], ["rgb", "fdi", "mask", "y_pred", "y_score"]):
-        ax.set_title(title)
-
-    for x, y, y_score_, y_pred_, id, ax_row in zip(
-        X, Y, y_score.cpu(), y_pred.cpu(), ids, axs
-    ):
-        ax_row[0].imshow(rgb(x.numpy()).transpose(1, 2, 0))
-        ax_row[1].imshow(fdi(x.numpy()))
-        ax_row[2].imshow(y)
-        ax_row[3].imshow(y_score_.squeeze().numpy())
-        ax_row[4].imshow(y_pred_.squeeze().numpy())
-
-        ax_row[0].set_ylabel(id)
-
-        for ax in ax_row:
-            ax.set_xticks([])
-            ax.set_yticks([])
-
-    plt.tight_layout()
-    plt.show()
-
-
-def download(url):
-    import os
-    import urllib
-
-    if not os.path.exists(os.path.basename(url)):
-        output_path = os.path.basename(url)
-        print(f"downloading {url} to {output_path}")
-        with DownloadProgressBar(
-            unit="B", unit_scale=True, miniters=1, desc=url.split("/")[-1]
-        ) as t:
-            urllib.request.urlretrieve(
-                url, filename=output_path, reporthook=t.update_to
-            )
-    else:
-        print(f"{os.path.basename(url)} exists. skipping...")
-
-
-class DownloadProgressBar(tqdm):
-    def update_to(self, b=1, bsize=1, tsize=None):
-        if tsize is not None:
-            self.total = tsize
-        self.update(b * bsize - self.n)
-
-
-def download_qualitative():
-    download(
-        "https://marinedebrisdetector.s3.eu-central-1.amazonaws.com/data/qualitative_test.npz"
-    )
-
-
-def download_accra():
-    download(
-        "https://marinedebrisdetector.s3.eu-central-1.amazonaws.com/data/accra_20181031.tif"
-    )
-
-
-def download_durban():
-    download(
-        "https://marinedebrisdetector.s3.eu-central-1.amazonaws.com/data/durban_20190424.tif"
-    )

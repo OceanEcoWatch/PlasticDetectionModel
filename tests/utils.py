@@ -32,4 +32,4 @@ def split_tiff(image_path, window_size=(480, 480)):
 
 
 if __name__ == "__main__":
-    split_tiff("tests/data/durban_20190424.tiff")
+    split_tiff("tests/data/2400_1440.tiff")

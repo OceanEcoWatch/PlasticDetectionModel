@@ -16,7 +16,9 @@ TEST_ENDPOINT_NAME = "TestMarineDebrisDetectorEndpoint"
 
 TEST_S3_BUCKET_NAME = "test-sagemaker-studio-768912473174-0ryazmj34j9"
 TEST_S3_FILENAME = "test-model.tar.gz"
+TEST_S3_IMAGE_NAME = "2400_1440.tiff"
 TEST_S3_MODEL_PATH = f"s3://{TEST_S3_BUCKET_NAME}/{TEST_S3_FILENAME}"
+TEST_S3_IMAGE_PATH = f"s3://{TEST_S3_BUCKET_NAME}/{TEST_S3_IMAGE_NAME}"
 
 
 @pytest.fixture

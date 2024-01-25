@@ -2,6 +2,7 @@ model/*
 model.tar.gz
 venv/
 images/
+*.ckpt
 
 #ruff
 .ruff_cache/
