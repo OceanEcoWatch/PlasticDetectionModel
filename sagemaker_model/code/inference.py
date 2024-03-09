@@ -2,7 +2,6 @@ import base64
 import io
 import json
 import logging
-import os
 import ssl
 import urllib.parse
 
@@ -13,6 +12,8 @@ import torch
 from botocore.exceptions import ClientError
 from marinedebrisdetector_mod.model.segmentation_model import SegmentationModel
 from marinedebrisdetector_mod.predictor import predict
+
+from sagemaker_model.code.marinedebrisdetector_mod.checkpoints import CHECKPOINTS
 
 logging.basicConfig(level=logging.INFO)
 
@@ -38,9 +39,7 @@ def define_device():
 def model_fn(model_dir):
     device = define_device()
     model = SegmentationModel.load_from_checkpoint(
-        checkpoint_path=os.path.join(
-            model_dir, "epoch=54-val_loss=0.50-auroc=0.987.ckpt"
-        ),
+        checkpoint_path=CHECKPOINTS["unet++1"],
         strict=False,
         map_location=device,
     )

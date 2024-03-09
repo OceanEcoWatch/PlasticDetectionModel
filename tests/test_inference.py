@@ -51,7 +51,7 @@ def test_predict_fn(np_data, model, expected_y_score):
 
 @pytest.mark.integration
 @pytest.mark.slow
-def test_inference_with_windowing(expected_prediction, input_data, expected_y_score):
+def test_inference_with_windowing(expected_prediction, input_data):
     pred_path = "tests/data/last_2400_1440_prediction.tiff"
     image_size = (480, 480)
     offset = 64
@@ -76,21 +76,10 @@ def test_inference_with_windowing(expected_prediction, input_data, expected_y_sc
                 window = image_window.intersection(
                     Window(c - offset, r - offset, W + offset, H + offset)
                 )
-                _y_score = predict_fn(
+
+                y_score = predict_fn(
                     input_fn(input_data, "application/octet-stream"), model=model
                 )
-                response = json.loads(output_fn(_y_score, "application/octet-stream"))
-                byte_data = base64.b64decode(response["data"])
-                shape = tuple(response["shape"])
-                dtype = response["dtype"]
-
-                y_score = np.frombuffer(byte_data, dtype=dtype).reshape(shape)
-
-                # y_score same after serialization and deserialization
-                np.testing.assert_allclose(y_score, _y_score, rtol=1e-6)
-
-                # y_score same as expected prediction
-                np.testing.assert_allclose(y_score, expected_y_score, rtol=1e-6)
 
                 assert y_score.shape[0] == window.height, "unpadding size mismatch"
                 assert y_score.shape[1] == window.width, "unpadding size mismatch"
@@ -148,9 +137,16 @@ def test_inference_with_windowing(expected_prediction, input_data, expected_y_sc
 
 
 @pytest.mark.unit
-def test_output_fn(expected_y_score):
-    output = output_fn(expected_y_score, "application/octet-stream")
-    assert isinstance(output, str)
+def test_output_fn_json(expected_y_score):
+    response = json.loads(output_fn(expected_y_score, "application/octet-stream"))
+    byte_data = base64.b64decode(response["data"])
+    shape = tuple(response["shape"])
+    dtype = response["dtype"]
+
+    y_score = np.frombuffer(byte_data, dtype=dtype).reshape(shape)
+
+    # y_score same after serialization and deserialization
+    np.testing.assert_allclose(y_score, expected_y_score, rtol=1e-6)
 
 
 @pytest.mark.unit
