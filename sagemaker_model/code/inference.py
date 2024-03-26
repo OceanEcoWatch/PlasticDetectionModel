@@ -1,6 +1,4 @@
-import base64
 import io
-import json
 import logging
 import ssl
 import urllib.parse
@@ -10,10 +8,10 @@ import numpy as np
 import rasterio
 import torch
 from botocore.exceptions import ClientError
-from marinedebrisdetector_mod.model.segmentation_model import SegmentationModel
-from marinedebrisdetector_mod.predictor import predict
 
-from sagemaker_model.code.marinedebrisdetector_mod.checkpoints import CHECKPOINTS
+from .marinedebrisdetector_mod.checkpoints import CHECKPOINTS
+from .marinedebrisdetector_mod.model.segmentation_model import SegmentationModel
+from .marinedebrisdetector_mod.predictor import predict
 
 logging.basicConfig(level=logging.INFO)
 
@@ -46,7 +44,7 @@ def model_fn(model_dir):
     return model.to(device).eval()
 
 
-def input_fn(request_body, request_content_type):
+def input_fn(request_body: bytes, request_content_type: str) -> np.ndarray:
     if request_content_type == "application/json":
         s3_uri_parts = urllib.parse.urlparse(request_body)
         bucket_name = s3_uri_parts.netloc
@@ -86,25 +84,14 @@ def predict_fn(input_data, model):
     )
 
 
-def output_fn(prediction, content_type):
+def output_fn(prediction, content_type) -> bytes:
     if content_type == "application/octet-stream" or content_type == "application/json":
         if not isinstance(prediction, np.ndarray):
             raise ValueError(
                 f"Prediction is not a numpy array, but {type(prediction)} instead"
             )
         LOGGER.info("Converting prediction to bytes")
-        prediction_bytes = prediction.tobytes()
-        LOGGER.info("Encoding prediction bytes to base64")
-        byte_data = base64.b64encode(prediction_bytes).decode("utf-8")
-        response = {
-            "data": byte_data,
-            "shape": prediction.shape,
-            "dtype": str(prediction.dtype),
-        }
-        LOGGER.info("Converting response to JSON")
-        json_response = json.dumps(response)
-        LOGGER.info("Returning response")
-        return json_response
+        return prediction.tobytes()
 
     else:
         raise ValueError(f"Unsupported content type: {content_type}")

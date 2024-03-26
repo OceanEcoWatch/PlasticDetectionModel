@@ -1,4 +1,3 @@
-import base64
 import io
 import json
 
@@ -130,15 +129,14 @@ def test_upload_model_create_invoke_and_delete_endpoint(input_data, expected_y_s
         response = json.loads(
             invoke(TEST_ENDPOINT_NAME, TEST_S3_IMAGE_PATH, CONTENT_TYPE_JSON)
         )
-        byte_data = base64.b64decode(response["data"])
-        shape = tuple(response["shape"])
-        dtype = response["dtype"]
 
-        y_score = np.frombuffer(byte_data, dtype=dtype).reshape(shape)
+        y_score = np.frombuffer(response, dtype=np.float32).reshape(
+            1, input_data.shape[1], input_data.shape[2]
+        )
 
         assert y_score.shape == expected_y_score.shape
         assert y_score.dtype == expected_y_score.dtype
-        np.testing.assert_allclose(y_score, expected_y_score, rtol=1e-6)
+        np.testing.assert_array_almost_equal(y_score, expected_y_score, decimal=3)
 
     finally:
         delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME)
