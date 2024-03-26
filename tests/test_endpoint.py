@@ -1,12 +1,14 @@
 import io
+import json
 
 import boto3
+import numpy as np
 import pytest
 import rasterio
 from moto import mock_sagemaker
 
 from config import (
-    CONTENT_TYPE,
+    CONTENT_TYPE_JSON,
     ENDPOINT_NAME,
     FRAMEWORK,
     FRAMEWORK_VERSION,
@@ -27,7 +29,7 @@ from endpoint.create_endpoint import (
     delete_model,
     wait_endpoint_creation,
 )
-from endpoint.invoke_endpoint import invoke_endpoint
+from endpoint.invoke_endpoint import invoke
 from endpoint.upload_model_s3 import upload_model
 from tests.conftest import (
     MSE_THRESHOLD,
@@ -36,6 +38,7 @@ from tests.conftest import (
     TEST_MODEL_NAME,
     TEST_S3_BUCKET_NAME,
     TEST_S3_FILENAME,
+    TEST_S3_IMAGE_PATH,
     TEST_S3_MODEL_PATH,
 )
 from tests.utils import mse
@@ -56,7 +59,7 @@ def test_create_endpoint():
         TEST_S3_MODEL_PATH,
         mock_model_name,
         SAGEMAKER_ROLE,
-        CONTENT_TYPE,
+        CONTENT_TYPE_JSON,
         mock_region_name,
         MEMORY_SIZE_MB,
         MAX_CONCURRENCY,
@@ -81,9 +84,7 @@ def test_create_endpoint():
 
 
 @pytest.mark.integration
-def test_upload_model_create_invoke_and_delete_endpoint(
-    input_data, expected_prediction
-):
+def test_upload_model_create_invoke_and_delete_endpoint(input_data, expected_y_score):
     delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME)
     delete_endpoint_config(TEST_ENDPOINT_CONFIG_NAME, REGION_NAME)
     delete_model(TEST_MODEL_NAME, REGION_NAME)
@@ -97,7 +98,7 @@ def test_upload_model_create_invoke_and_delete_endpoint(
             TEST_S3_MODEL_PATH,
             TEST_MODEL_NAME,
             SAGEMAKER_ROLE,
-            CONTENT_TYPE,
+            CONTENT_TYPE_JSON,
             REGION_NAME,
             MEMORY_SIZE_MB,
             MAX_CONCURRENCY,
@@ -125,17 +126,17 @@ def test_upload_model_create_invoke_and_delete_endpoint(
         assert endpoint_response["EndpointName"] == TEST_ENDPOINT_NAME
         assert endpoint_response["EndpointConfigName"] == TEST_ENDPOINT_CONFIG_NAME
 
-        predictions = invoke_endpoint(
-            TEST_ENDPOINT_NAME, input_data, CONTENT_TYPE, REGION_NAME
+        response = json.loads(
+            invoke(TEST_ENDPOINT_NAME, TEST_S3_IMAGE_PATH, CONTENT_TYPE_JSON)
         )
 
-        with rasterio.open(io.BytesIO(predictions)) as src:
-            pred_image = src.read()
-        with rasterio.open(io.BytesIO(expected_prediction)) as src:
-            expected_image = src.read()
-        assert pred_image.shape == expected_image.shape
-        assert pred_image.dtype == expected_image.dtype
-        assert mse(pred_image, expected_image) < MSE_THRESHOLD
+        y_score = np.frombuffer(response, dtype=np.float32).reshape(
+            1, input_data.shape[1], input_data.shape[2]
+        )
+
+        assert y_score.shape == expected_y_score.shape
+        assert y_score.dtype == expected_y_score.dtype
+        np.testing.assert_array_almost_equal(y_score, expected_y_score, decimal=3)
 
     finally:
         delete_endpoint(TEST_ENDPOINT_NAME, REGION_NAME)
@@ -147,11 +148,10 @@ def test_upload_model_create_invoke_and_delete_endpoint(
 
 @pytest.mark.e2e
 def test_endpoint_invoke_in_production(input_data, expected_prediction):
-    predictions = invoke_endpoint(
+    predictions = invoke(
         ENDPOINT_NAME,
         input_data,
-        CONTENT_TYPE,
-        REGION_NAME,
+        CONTENT_TYPE_JSON,
     )
 
     with rasterio.open(io.BytesIO(predictions)) as src:

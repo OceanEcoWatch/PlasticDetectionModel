@@ -1,12 +1,17 @@
 import io
 import logging
 import ssl
+import urllib.parse
 
+import boto3
+import numpy as np
 import rasterio
 import torch
-from marinedebrisdetector.checkpoints import CHECKPOINTS
-from marinedebrisdetector.model.segmentation_model import SegmentationModel
-from marinedebrisdetector.predictor import predict
+from botocore.exceptions import ClientError
+
+from .marinedebrisdetector_mod.checkpoints import CHECKPOINTS
+from .marinedebrisdetector_mod.model.segmentation_model import SegmentationModel
+from .marinedebrisdetector_mod.predictor import predict
 
 logging.basicConfig(level=logging.INFO)
 
@@ -29,45 +34,64 @@ def define_device():
     return processing_unit
 
 
-def model_fn(model_dir) -> SegmentationModel:
+def model_fn(model_dir):
     device = define_device()
-    create_unverified_https_context()
-
-    detector = SegmentationModel.load_from_checkpoint(
+    model = SegmentationModel.load_from_checkpoint(
         checkpoint_path=CHECKPOINTS["unet++1"],
         strict=False,
         map_location=device,
     )
-
-    LOGGER.info(f"Loaded model from {CHECKPOINTS['unet++1']}")
-    return detector
+    return model.to(device).eval()
 
 
-def input_fn(request_body, request_content_type):
+def input_fn(request_body: bytes, request_content_type: str) -> np.ndarray:
+    if request_content_type == "application/json":
+        s3_uri_parts = urllib.parse.urlparse(request_body)
+        bucket_name = s3_uri_parts.netloc
+        s3_key = s3_uri_parts.path.lstrip("/")
+
+        s3_resource = boto3.resource("s3")
+        s3_object = s3_resource.Object(bucket_name, s3_key)
+        try:
+            s3_response = s3_object.get()
+            request_body = s3_response["Body"].read()
+            with rasterio.open(io.BytesIO(request_body)) as src:
+                image = src.read()
+                return image
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "NoSuchKey":
+                LOGGER.error(
+                    f"The specified key does not exist: {s3_key} in bucket {bucket_name}"
+                )
+            else:
+                raise
+        with rasterio.open(io.BytesIO(request_body)) as src:
+            image = src.read()
+            return image
+
     if request_content_type == "application/octet-stream":
         with rasterio.open(io.BytesIO(request_body)) as src:
             image = src.read()
-            meta = src.meta.copy()
-            return image, meta
+            return image
     else:
         raise ValueError(f"Unsupported content type: {request_content_type}")
 
 
 def predict_fn(input_data, model):
-    processing_unit = define_device()
-    LOGGER.info(f"Predicting on {processing_unit}")
-    prediction = predict(
+    return predict(
         model,
-        image=input_data[0],
-        metadata=input_data[1],
-        device=processing_unit,
+        image=input_data,
     )
-    LOGGER.info(f"Prediction: {prediction}")
-    return prediction
 
 
-def output_fn(prediction, content_type):
-    if content_type == "application/octet-stream":
-        return prediction
+def output_fn(prediction, content_type) -> bytes:
+    if content_type == "application/octet-stream" or content_type == "application/json":
+        if not isinstance(prediction, np.ndarray):
+            raise ValueError(
+                f"Prediction is not a numpy array, but {type(prediction)} instead"
+            )
+        LOGGER.info("Converting prediction to bytes")
+        return prediction.tobytes()
+
     else:
         raise ValueError(f"Unsupported content type: {content_type}")

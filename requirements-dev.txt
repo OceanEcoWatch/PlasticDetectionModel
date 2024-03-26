@@ -1,5 +1,6 @@
 pytest
 pytest-testmon
+scikit-learn
 ruff
 black
 isort

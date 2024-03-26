@@ -8,7 +8,7 @@ from sagemaker import image_uris
 from sagemaker.serverless import ServerlessInferenceConfig
 
 from config import (
-    CONTENT_TYPE,
+    CONTENT_TYPE_JSON,
     ENDPOINT_CONFIG_NAME,
     ENDPOINT_NAME,
     FRAMEWORK,
@@ -208,7 +208,7 @@ if __name__ == "__main__":
         S3_MODEL_PATH,
         MODEL_NAME,
         SAGEMAKER_ROLE,
-        CONTENT_TYPE,
+        CONTENT_TYPE_JSON,
         REGION_NAME,
         MEMORY_SIZE_MB,
         MAX_CONCURRENCY,

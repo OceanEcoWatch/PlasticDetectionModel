@@ -1,23 +1,25 @@
+import logging
+from typing import Union
+
 import boto3
 
-from config import CONTENT_TYPE, ENDPOINT_NAME, REGION_NAME
+LOGGER = logging.getLogger(__name__)
 
 
-def invoke_endpoint(
-    endpoint_name: str, input_data: bytes, content_type: str, region_name: str
+def invoke(
+    endpoint_name: str,
+    payload: Union[bytes, str],
+    content_type: str,
+    retry_count: int = 0,
+    max_retries: int = 10,
 ) -> bytes:
-    runtime = boto3.client("sagemaker-runtime", region_name=region_name)
+    runtime = boto3.client("sagemaker-runtime", region_name="eu-central-1")
 
     response = runtime.invoke_endpoint(
         EndpointName=endpoint_name,
         ContentType=content_type,
-        Body=input_data,
+        Body=payload,
         Accept=content_type,
     )
-    return response["Body"].read()
-
-
-if __name__ == "__main__":
-    with open("images/first_half.tiff", "rb") as f:
-        input_data = f.read()
-    invoke_endpoint(ENDPOINT_NAME, input_data, CONTENT_TYPE, REGION_NAME)
+    prediction = response["Body"].read()
+    return prediction
