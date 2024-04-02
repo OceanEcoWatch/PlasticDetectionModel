@@ -1,13 +1,9 @@
 name: E2E Tests
 
 on:
-  workflow_run:
-    workflows: ["Deploy"]
-    types:
-      - completed
-
-  schedule:
-    - cron: "0 0 * * *" # daily at 00:00 UTC
+  push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -42,8 +38,6 @@ jobs:
           python -m pip install --upgrade pip
 
           pip install -r requirements.txt
-          pip install -r requirements-dev.txt
-          pip install -r sagemaker_model/code/requirements.txt
 
       - name: Run tests with testmon
         run: python -m pytest -vv --testmon -m 'e2e'
