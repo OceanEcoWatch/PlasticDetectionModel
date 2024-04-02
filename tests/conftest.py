@@ -1,19 +1,14 @@
-import sys
+import io
 
-sys.path.append("sagemaker_model/code")
+import numpy as np
+import pytest
+import rasterio
 
-import io  # noqa
-
-import numpy as np  # noqa
-import pytest  # noqa
-import rasterio  # noqa
-from marinedebrisdetector_mod.checkpoints import CHECKPOINTS  # noqa
-from marinedebrisdetector_mod.model.segmentation_model import SegmentationModel  # noqa
+from src.marinedebrisdetector_mod.checkpoints import CHECKPOINTS
+from src.marinedebrisdetector_mod.model.segmentation_model import SegmentationModel
 
 MSE_THRESHOLD = 0.01
-TEST_MODEL_NAME = "TestMarineDebrisDetectorModel"
-TEST_ENDPOINT_CONFIG_NAME = "TestMarineDebrisDetectorEndpointConfig"
-TEST_ENDPOINT_NAME = "TestMarineDebrisDetectorEndpoint"
+
 
 TEST_S3_BUCKET_NAME = "test-sagemaker-studio-768912473174-0ryazmj34j9"
 TEST_S3_FILENAME = "test-model.tar.gz"
@@ -64,4 +59,4 @@ def expected_y_score():
         "tests/data/exp_y_score.npy",
         "rb",
     ) as f:
-        return np.load(f)
+        return np.load(f).squeeze()

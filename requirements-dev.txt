@@ -1,7 +1,8 @@
+-r builder/requirements.txt
+
 pytest
 pytest-testmon
-scikit-learn
+python-dotenv
 ruff
 black
 isort
-moto
