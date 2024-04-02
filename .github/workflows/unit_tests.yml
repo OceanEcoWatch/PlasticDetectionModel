@@ -56,7 +56,4 @@ jobs:
         if: env.SKIPPING_TESTS == 'false'
         run: python -m pytest -vv --testmon -m 'unit'
         env:
-          SAGEMAKER_ROLE: ${{ secrets.SAGEMAKER_ROLE }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          RUNPOD_API_KEY: ${{ secrets.RUNPOD_API_KEY }}
