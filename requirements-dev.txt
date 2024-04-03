@@ -1,6 +1,8 @@
+-r builder/requirements.txt
+
 pytest
 pytest-testmon
+python-dotenv
 ruff
 black
 isort
-moto

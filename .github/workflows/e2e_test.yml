@@ -1,13 +1,9 @@
 name: E2E Tests
 
 on:
-  workflow_run:
-    workflows: ["Deploy"]
-    types:
-      - completed
-
-  schedule:
-    - cron: "0 0 * * *" # daily at 00:00 UTC
+  push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -25,7 +21,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -42,13 +38,8 @@ jobs:
           python -m pip install --upgrade pip
 
           pip install -r requirements.txt
-          pip install -r requirements-dev.txt
-          pip install -r sagemaker_model/code/requirements.txt
 
       - name: Run tests with testmon
         run: python -m pytest -vv --testmon -m 'e2e'
         env:
-          SAGEMAKER_ROLE: ${{ secrets.SAGEMAKER_ROLE }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          RUNPOD_API_KEY: ${{ secrets.RUNPOD_API_KEY }}
