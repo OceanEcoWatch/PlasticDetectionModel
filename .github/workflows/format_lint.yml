@@ -25,4 +25,4 @@ jobs:
       - name: Format with isort
         run: isort . --profile black
       - name: Lint with ruff
-        run: ruff --output-format=github .
+        run: ruff check --output-format=github .
