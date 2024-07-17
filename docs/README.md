@@ -7,10 +7,6 @@
 PlasticDetectionModel is a machine learning model used for detecting marine debris, specifically plastic, from Sentinel-2 L2A satellite images. The model is customized from the [marinedebrisdetector](https://github.com/MarcCoru/marinedebrisdetector/tree/main) to work in memory on a serverless cloud infrastructure. This repository contains the code and resources necessary for deploying the model on a [Runpod](https://www.runpod.io/serverless-gpu) serverless GPU. This repository is part of a larger pipeline aimed at identifying marine debris on a schedule: [PlasticDetectionService](https://github.com/OceanEcoWatch/PlasticDetectionService).
 Ultimately, the predictions are displayed on our [mapping application](https://github.com/OceanEcoWatch/website), deployed here: https://oceanecowatch.org/en
 
-## CI/CD Diagram
-
-![CI/CD Diagram](https://github.com/OceanEcoWatch/PlasticDetectionModel/blob/main/docs/PlasticDetectionModel.png?raw=true)
-
 ## Installation
 
 ### Add .env
@@ -37,3 +33,8 @@ To deploy this Dockerized version on a Runpod serverless instance, follow these 
 - In the deployment settings, specify the Docker image to use: oceanecowatch/marinext:latest.
 - Deploy the instance and monitor the logs to ensure everything is running smoothly.
 For detailed instructions, refer to the Runpod documentation.
+
+## CI/CD Diagram
+
+![CI/CD Diagram](https://github.com/OceanEcoWatch/PlasticDetectionModel/blob/main/docs/PlasticDetectionModel.png?raw=true)
+
